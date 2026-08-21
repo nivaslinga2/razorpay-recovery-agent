@@ -1,0 +1,19 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Secrets (CRITICAL: Never push these!)
+.env
+
+# Generated data (These are created by your scripts, not source code)
+*.db
+*.json
+*.sqlite3
+
+# Streamlit local cache
+.streamlit/
+
+# OS junk
+.DS_Store
+Thumbs.db
