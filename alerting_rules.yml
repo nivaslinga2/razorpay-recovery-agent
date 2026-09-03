@@ -1,0 +1,21 @@
+groups:
+  - name: recovery_alerts
+    rules:
+      - alert: RecoveryRateDropped
+        expr: |
+          (sum(recovery_attempts_total{status="success"}) / sum(recovery_attempts_total)) < 0.4
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Recovery rate dropped below 40%"
+          description: "Production payment recovery rate is critically low over the last 10 minutes."
+
+      - alert: CeleryQueueBacklogHigh
+        expr: celery_queue_depth > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery recovery task queue backlog > 1,000 tasks"
+          description: "Worker capacity is saturated. Scale up Celery worker replicas."
