@@ -1,0 +1,443 @@
+/* ==========================================================================
+   PayResQ: Wall Street Obsidian & Champagne Gold (Tier-1 Institutional)
+   ========================================================================== */
+
+:root {
+  /* Obsidian Base Tokens */
+  --obsidian-bg: #090C12;
+  --obsidian-vault: #0E131C;
+  --obsidian-surface: #121824;
+  --obsidian-inner: #0A0E17;
+  
+  /* Champagne Gold Accents */
+  --gold-primary: #D4AF37;
+  --gold-light: #F7D774;
+  --gold-dark: #A68018;
+  --gold-border: rgba(212, 175, 55, 0.24);
+  --gold-border-hover: rgba(247, 215, 116, 0.55);
+  --gold-glow: 0 0 16px rgba(212, 175, 55, 0.32);
+  --gold-gradient: linear-gradient(135deg, #FCE082 0%, #E5B824 50%, #B38612 100%);
+
+  /* Institutional Banking Gradients */
+  --fin-danger-gradient: linear-gradient(135deg, #E63946 0%, #931B24 100%);
+  --fin-success-gradient: linear-gradient(135deg, #10B981 0%, #065F46 100%);
+  --fin-warning-gradient: linear-gradient(135deg, #F59E0B 0%, #9A3412 100%);
+  --fin-info-gradient: linear-gradient(135deg, #F3BA2F 0%, #997A00 100%);
+  --fin-primary-gradient: var(--gold-gradient);
+
+  /* Typography */
+  --text-primary: #F8FAFC;
+  --text-gold: #F7D774;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+}
+
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--obsidian-bg);
+  --bs-body-color: var(--text-primary);
+  --bs-card-bg: var(--obsidian-surface);
+}
+
+[data-bs-theme="light"] {
+  --obsidian-bg: #F8FAFC;
+  --obsidian-vault: #FFFFFF;
+  --obsidian-surface: #FFFFFF;
+  --obsidian-inner: #F1F5F9;
+  --gold-border: rgba(166, 128, 24, 0.28);
+  --gold-border-hover: #A68018;
+  --text-primary: #0F172A;
+  --text-gold: #997A00;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --bs-body-bg: #F8FAFC;
+  --bs-body-color: #0F172A;
+  --bs-card-bg: #FFFFFF;
+}
+
+/* ==========================================================================
+   Micro-Animations & Keyframes
+   ========================================================================== */
+
+@keyframes pulseGoldGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Live Gold Pulse Node */
+.live-pulse-node {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--gold-light);
+  animation: pulseGoldGlow 2.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* ==========================================================================
+   SmallBox Banking Metric Cards (Wall Street Edition)
+   ========================================================================== */
+
+.small-box {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5), 0 0 1px rgba(212, 175, 55, 0.2);
+  display: block;
+  margin-bottom: 20px;
+  position: relative;
+  color: #fff;
+  overflow: hidden;
+  border: 1px solid var(--gold-border);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.small-box:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.65), var(--gold-glow);
+  border-color: var(--gold-border-hover);
+  text-decoration: none;
+}
+
+/* Theme Gradients */
+.small-box.bg-danger {
+  background: var(--fin-danger-gradient) !important;
+}
+.small-box.bg-success {
+  background: var(--fin-success-gradient) !important;
+}
+.small-box.bg-warning {
+  background: var(--fin-warning-gradient) !important;
+}
+.small-box.bg-info {
+  background: var(--fin-info-gradient) !important;
+  color: #0A0E17 !important;
+}
+.small-box.bg-info h3,
+.small-box.bg-info p {
+  color: #0A0E17 !important;
+}
+.small-box.bg-primary {
+  background: var(--fin-primary-gradient) !important;
+  color: #0A0E17 !important;
+}
+
+.small-box .inner {
+  padding: 20px 22px;
+  position: relative;
+  z-index: 2;
+}
+
+.small-box h3 {
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.small-box p {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 0;
+  opacity: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.small-box .icon {
+  color: rgba(255, 255, 255, 0.16);
+  z-index: 1;
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  font-size: 68px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.35s ease;
+}
+
+.small-box:hover .icon {
+  transform: scale(1.12) rotate(4deg);
+  color: rgba(247, 215, 116, 0.35);
+}
+
+.small-box-footer {
+  background-color: rgba(0, 0, 0, 0.28);
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 0;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.small-box-footer:hover {
+  background-color: rgba(0, 0, 0, 0.42);
+  color: var(--gold-light);
+}
+
+/* ==========================================================================
+   PayResQ Timeline (Audit Ledger in Gold)
+   ========================================================================== */
+
+.timeline {
+  margin: 0 0 20px;
+  padding: 0;
+  position: relative;
+}
+
+.timeline::before {
+  border-radius: 4px;
+  background-color: var(--gold-border);
+  bottom: 0;
+  content: "";
+  left: 31px;
+  position: absolute;
+  top: 0;
+  width: 3px;
+}
+
+.timeline > div {
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.timeline-time-label {
+  display: inline-block;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  margin-left: 8px;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+  background: var(--gold-gradient) !important;
+  color: #0A0E17 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.timeline > div > .bi {
+  background-color: var(--obsidian-surface);
+  border: 1px solid var(--gold-border);
+  border-radius: 50%;
+  font-size: 15px;
+  height: 34px;
+  left: 16px;
+  line-height: 34px;
+  position: absolute;
+  text-align: center;
+  top: 0;
+  width: 34px;
+  color: var(--gold-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.timeline > div:hover > .bi {
+  transform: scale(1.18);
+  border-color: var(--gold-light);
+}
+
+.timeline-item {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  background-color: var(--obsidian-surface);
+  border: 1px solid var(--gold-border);
+  color: var(--text-primary);
+  margin-left: 62px;
+  margin-right: 0;
+  margin-top: 0;
+  padding: 0;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.timeline-item:hover {
+  border-color: var(--gold-border-hover);
+  transform: translateX(3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 10px rgba(212, 175, 55, 0.15);
+}
+
+.timeline-item > .time {
+  color: var(--text-gold);
+  font-weight: 600;
+  float: right;
+  font-size: 12px;
+  padding: 12px 16px;
+}
+
+.timeline-header {
+  border-bottom: 1px solid var(--gold-border);
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.2;
+  margin: 0;
+  padding: 12px 16px;
+  font-weight: 700;
+}
+
+.timeline-body {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #CBD5E1;
+  line-height: 1.5;
+}
+
+.timeline-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--gold-border);
+  background-color: rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Sidebar & Navigation Styling (Obsidian & Gold)
+   ========================================================================== */
+
+.app-sidebar {
+  width: 255px;
+  background-color: var(--obsidian-vault);
+  border-right: 1px solid var(--gold-border);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 100vh;
+  z-index: 1020;
+}
+
+.app-sidebar.collapsed {
+  width: 72px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  margin: 4px 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-nav-item:hover {
+  background-color: rgba(212, 175, 55, 0.08);
+  color: var(--gold-light);
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: translateX(3px);
+}
+
+.sidebar-nav-item.active {
+  background: var(--gold-gradient);
+  color: #0A0E17 !important;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
+  border-color: var(--gold-light);
+}
+
+.sidebar-nav-item.active i {
+  color: #0A0E17 !important;
+}
+
+/* ==========================================================================
+   Cards & Table Styling
+   ========================================================================== */
+
+.card {
+  background-color: var(--obsidian-surface) !important;
+  border: 1px solid var(--gold-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.card-header {
+  border-bottom: 1px solid var(--gold-border) !important;
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+.table-hover tbody tr {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(212, 175, 55, 0.08) !important;
+}
+
+/* Custom Gold Button */
+.btn-primary {
+  background: var(--gold-gradient) !important;
+  color: #0A0E17 !important;
+  border: none !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.55);
+  transform: translateY(-1px);
+  color: #000000 !important;
+}
+
+.btn:active {
+  transform: scale(0.97);
+  transition: transform 0.08s ease;
+}
+
+/* ==========================================================================
+   Modal Animation & Glassmorphism
+   ========================================================================== */
+
+.modal-backdrop-custom {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(9, 12, 18, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-dialog {
+  animation: modalScaleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content {
+  background-color: var(--obsidian-surface) !important;
+  border: 1px solid var(--gold-border-hover) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), var(--gold-glow) !important;
+}
