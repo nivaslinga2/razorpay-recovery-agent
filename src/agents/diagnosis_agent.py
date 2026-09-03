@@ -3,17 +3,87 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
-from groq import Groq
+try:
+    from groq import Groq
+except ImportError:
+    Groq = None
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Initialize the raw Groq client
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# Initialize the raw Groq client safely
+client = Groq(api_key=os.getenv("GROQ_API_KEY")) if (Groq and os.getenv("GROQ_API_KEY")) else None
 
 # The model we will use (picked from your list)
 MODEL_NAME = "openai/gpt-oss-120b"  # If you hit rate limits, change to "openai/gpt-oss-20b"
+
+HEURISTIC_MAP = {
+    "BANK_INSUFFICIENT_FUNDS": {
+        "root_cause": "Customer has insufficient funds in account",
+        "recovery_action": "send_reminder",
+        "hinglish_message": "Sir, aapke account me funds kam the. Balance add karke dobara try karein."
+    },
+    "USER_TIMEOUT": {
+        "root_cause": "Customer took too long on checkout screen",
+        "recovery_action": "send_reminder",
+        "hinglish_message": "Aapka checkout session expire ho gaya. Kripya niche diye link se complete karein."
+    },
+    "CHECKOUT_EXIT": {
+        "root_cause": "Customer closed payment window",
+        "recovery_action": "send_reminder",
+        "hinglish_message": "Aapki payment incomplete reh gayi thi. Kripya yahan click karke complete karein."
+    },
+    "CARD_DECLINED": {
+        "root_cause": "Card declined by issuing bank",
+        "recovery_action": "retry_payment",
+        "hinglish_message": "Aapka card bank ne decline kiya. Kripya dusra card ya UPI use karein."
+    },
+    "UNAUTHORIZED_TXN": {
+        "root_cause": "Transaction not authorized by user/bank",
+        "recovery_action": "retry_payment",
+        "hinglish_message": "Transaction authenticate nahi ho payi. Kripya dubara OTP daal kar try karein."
+    }
+}
+
+def cheap_heuristic_router(error_code: str):
+    if not error_code:
+        return None
+    return HEURISTIC_MAP.get(error_code, None)
+
+def calculate_roi(amount_rupees: float, error: str, model_type: str) -> float:
+    """
+    Calculates the expected net recovery for a given model.
+    We use a simple heuristic scoring matrix (can be trained later).
+    """
+    success_prob = {
+        "BANK_INSUFFICIENT_FUNDS": {"heuristic": 0.95, "groq": 0.94, "gpt": 0.96},
+        "USER_TIMEOUT": {"heuristic": 0.92, "groq": 0.93, "gpt": 0.95},
+        "CHECKOUT_EXIT": {"heuristic": 0.90, "groq": 0.91, "gpt": 0.94},
+        "CARD_DECLINED": {"heuristic": 0.88, "groq": 0.90, "gpt": 0.95},
+        "UNAUTHORIZED_TXN": {"heuristic": 0.0, "groq": 0.60, "gpt": 0.85},
+        "UNKNOWN": {"heuristic": 0.0, "groq": 0.40, "gpt": 0.75}
+    }
+    
+    prob = success_prob.get(error, success_prob["UNKNOWN"]).get(model_type, 0)
+    cost = {"heuristic": 0.0, "groq": 0.0001, "gpt": 0.002}
+    expected_return = (amount_rupees * prob) - cost.get(model_type, 0)
+    return expected_return
+
+def smart_router(case: dict) -> str:
+    roi_heuristic = calculate_roi(case.get("amount_rupees", 0), case.get("error", "UNKNOWN"), "heuristic")
+    roi_groq = calculate_roi(case.get("amount_rupees", 0), case.get("error", "UNKNOWN"), "groq")
+    roi_gpt = calculate_roi(case.get("amount_rupees", 0), case.get("error", "UNKNOWN"), "gpt")
+    
+    if roi_gpt > roi_groq and roi_gpt > roi_heuristic and roi_gpt > 0:
+        return "gpt"
+    elif roi_groq > roi_heuristic and roi_groq > 0:
+        return "groq"
+    elif roi_heuristic > 0:
+        return "heuristic"
+    else:
+        return "ignore"
+
 
 def diagnose_risk_cases():
     risk_path = BASE_DIR / "risk_payload.json"

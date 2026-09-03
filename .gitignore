@@ -2,13 +2,28 @@
 venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Secrets (CRITICAL: Never push these!)
 .env
+.env.*
+!.env.example
 
-# Generated data (These are created by your scripts, not source code)
+# Node / Frontend builds
+node_modules/
+dist/
+.vite/
+
+# Database dumps & temporary files
+backups/
+*.sql
+*.mp3
+*.log
+diagnosed_risks.json
+risk_payload.json
+
+# Generated data
 *.db
-*.json
 *.sqlite3
 
 # Streamlit local cache

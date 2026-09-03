@@ -30,7 +30,9 @@ def seed_database():
             status TEXT,
             error_code TEXT,
             bank_rrn TEXT,
-            created_at TEXT
+            created_at TEXT,
+            is_recovered BOOLEAN DEFAULT 0,      -- NEW: tracks if money is recovered
+            recovered_at TEXT DEFAULT NULL       -- NEW: tracks when it was recovered
         );
         
         CREATE TABLE audit_log (

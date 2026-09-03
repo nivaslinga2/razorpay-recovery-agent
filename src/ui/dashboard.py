@@ -1,160 +1,166 @@
-# src/ui/dashboard.py
+# src/ui/dashboard.py (Production-Ready UI)
 import streamlit as st
+import pandas as pd
 import json
-import razorpay
-import os
-from datetime import datetime
+import sqlite3
 from pathlib import Path
-from dotenv import load_dotenv
+from datetime import datetime
+import time
 
-load_dotenv()
+# Import the service
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from services.recovery_service import RecoveryService
 
 # --- Page Config ---
 st.set_page_config(page_title="Razorpay Revenue Recovery", page_icon="💰", layout="wide")
 
-# --- Initialize Razorpay Client (Test Mode) ---
-# This proves to the judges you are actually integrated with their APIs!
-razorpay_client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
-
-# --- Load Data ---
+# --- Database Connection Helper ---
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DATA_PATH = BASE_DIR / "diagnosed_risks.json"
+DB_PATH = BASE_DIR / "recovery_data.db"
 
-@st.cache_data
 def load_data():
-    if not DATA_PATH.exists():
-        st.error("❌ Run diagnosis_agent.py first to generate diagnosed_risks.json")
-        return []
-    with open(DATA_PATH, "r") as f:
-        return json.load(f)
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM transactions")
+    rows = cur.fetchall()
+    conn.close()
+    return pd.DataFrame([dict(row) for row in rows])
 
-# --- Session State Initialization ---
-if "recovered_amount" not in st.session_state:
-    st.session_state.recovered_amount = 0
-if "audit_trail" not in st.session_state:
-    st.session_state.audit_trail = []
-if "recovered_ids" not in st.session_state:
-    st.session_state.recovered_ids = set()
+def get_audit_trail():
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 20")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
-# --- Helper Functions ---
-def recover_transaction(txn_id, amount, email):
-    """Simulates calling Razorpay API to retry the payment."""
-    try:
-        # --- THE REAL RAZORPAY CALL (Test Mode) ---
-        # We create a new Payment Link for the failed amount.
-        # This is the "bounded recovery action" the judges are looking for.
-        payment_link = razorpay_client.payment_link.create({
-            "amount": amount * 100,  # Convert to paise
-            "currency": "INR",
-            "description": f"Recovery for {txn_id}",
-            "customer": {"email": email},
-            "callback_url": "https://example.com/success", # Dummy callback
-            "callback_method": "get"
-        })
-        
-        # If we reach here, the API call succeeded.
-        link_url = payment_link.get("short_url", payment_link.get("id"))
-        
-        # Update state
-        st.session_state.recovered_amount += amount
-        st.session_state.recovered_ids.add(txn_id)
-        st.session_state.audit_trail.append({
-            "txn_id": txn_id,
-            "amount": amount,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "status": "✅ Success",
-            "razorpay_link": link_url
-        })
-        return True, link_url
-    except Exception as e:
-        # --- GRACEFUL FAILURE (As required by the BAR) ---
-        st.session_state.audit_trail.append({
-            "txn_id": txn_id,
-            "amount": amount,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "status": f"❌ Failed: {str(e)[:50]}",
-            "razorpay_link": "N/A"
-        })
-        return False, str(e)
+# --- Session State for Notifications ---
+if "toast" not in st.session_state:
+    st.session_state.toast = None
+
+def show_toast(message, type="success"):
+    st.session_state.toast = {"message": message, "type": type}
 
 # --- Main UI ---
 def main():
     st.title("💰 Razorpay Revenue Recovery Agent")
-    st.caption("AI-powered recovery for failed and abandoned transactions | **Test Mode**")
+    st.caption("Production-Grade | Persistent State | Bulk Recovery | Audit Trail")
     st.divider()
 
-    data = load_data()
-    if not data:
+    df = load_data()
+    if df.empty:
+        st.warning("No data found. Run seeder.py first!")
         st.stop()
 
-    # --- Metrics Row ---
-    total_risk = sum(item["amount_rupees"] for item in data)
-    recovered = st.session_state.recovered_amount
-    pending = total_risk - recovered
+    # --- METRICS (Calculated from DB) ---
+    total_risk = df[df["is_recovered"] == 0]["amount"].sum() / 100
+    recovered_amount = df[df["is_recovered"] == 1]["amount"].sum() / 100
+    pending_count = len(df[df["is_recovered"] == 0])
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("📊 At-Risk Cases", len(data))
-    with col2:
-        st.metric("💰 Total Revenue at Risk", f"₹{total_risk:,.0f}")
-    with col3:
-        st.metric("✅ Recovered", f"₹{recovered:,.0f}", delta=f"{recovered/total_risk*100:.1f}%" if total_risk>0 else "0%")
-    with col4:
-        st.metric("⏳ Pending Recovery", f"₹{pending:,.0f}")
+    with col1: st.metric("📊 Total Cases", len(df))
+    with col2: st.metric("💰 At-Risk Revenue", f"₹{total_risk:,.0f}")
+    with col3: st.metric("✅ Recovered", f"₹{recovered_amount:,.0f}")
+    with col4: st.metric("⏳ Pending", f"{pending_count} cases")
 
     st.divider()
-    st.subheader("📋 AI Diagnosis & Recovery Actions")
 
-    # --- Transaction Cards ---
-    for idx, row in enumerate(data):
-        txn_id = row["transaction_id"]
-        
-        # Check if already recovered
-        if txn_id in st.session_state.recovered_ids:
-            continue  # Hide recovered ones to keep the list clean (or you can show them greyed out)
+    # --- Filtering ---
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        status_filter = st.selectbox("Filter by Status", ["All", "failed", "abandoned", "captured"])
+    with col_f2:
+        recovered_filter = st.selectbox("Show", ["Pending Only", "Recovered Only", "All"])
 
-        with st.container(border=True):
-            c1, c2, c3 = st.columns([2, 3, 1])
-            
-            with c1:
-                st.write(f"**{txn_id}**")
-                st.caption(f"📧 {row['customer']}")
-                st.caption(f"💵 ₹{row['amount_rupees']:,.0f} | Status: {row['status'].upper()}")
-                if row.get("error"):
-                    st.caption(f"⚠️ Error: {row['error']}")
+    filtered_df = df[df["status"] == status_filter] if status_filter != "All" else df
+    if recovered_filter == "Pending Only":
+        filtered_df = filtered_df[filtered_df["is_recovered"] == 0]
+    elif recovered_filter == "Recovered Only":
+        filtered_df = filtered_df[filtered_df["is_recovered"] == 1]
 
-            with c2:
-                st.info(f"💬 **Hinglish Recovery:** {row['hinglish_message']}")
-                st.caption(f"🧠 Root Cause: {row['ai_diagnosis']}")
-
-            with c3:
-                st.write("")
-                st.write("")
-                # The Recover Button
-                if st.button("🚀 Recover", key=f"btn_{txn_id}", type="primary"):
-                    with st.spinner(f"Calling Razorpay API to recover {txn_id}..."):
-                        success, result = recover_transaction(
-                            txn_id, 
-                            row["amount_rupees"], 
-                            row["customer"]
-                        )
-                    if success:
-                       st.success(f"✅ Recovered ₹{row['amount_rupees']:,.0f}! Link: {result}")
-                       st.rerun()  # Keep this to refresh the metrics and hide the recovered transaction
-                    else:
-                       st.error(f"❌ Recovery failed. System logged error: {result}")
-
-    # --- Audit Trail (The BAR Requirement) ---
-    st.divider()
-    with st.expander("📜 Audit Trail (Compliance & Escalation Log)"):
-        if st.session_state.audit_trail:
-            st.dataframe(st.session_state.audit_trail)
-            st.caption(f"Total actions logged: {len(st.session_state.audit_trail)}")
+    # --- Bulk Recovery Selection ---
+    st.subheader("📋 Transactions")
+    
+    # Initialize service
+    service = RecoveryService()
+    
+    # Show toast if exists
+    if st.session_state.toast:
+        if st.session_state.toast["type"] == "success":
+            st.success(st.session_state.toast["message"])
         else:
-            st.info("No actions performed yet. Click 'Recover' on a transaction to populate the audit trail.")
+            st.error(st.session_state.toast["message"])
+        st.session_state.toast = None
 
+    # --- Table with Checkboxes ---
+    selected_ids = []
+    for idx, row in filtered_df.iterrows():
+        col1, col2, col3, col4, col5 = st.columns([0.5, 1.5, 2, 2, 1.5])
+        with col1:
+            if row["is_recovered"] == 0:
+                checked = st.checkbox("", key=f"cb_{row['id']}")
+                if checked:
+                    selected_ids.append(row["id"])
+        with col2:
+            st.write(f"**{row['id']}**")
+            st.caption(f"₹{row['amount']/100:,.0f}")
+        with col3:
+            st.write(f"Status: {row['status'].upper()}")
+            if row.get("error_code"):
+                st.caption(f"Error: {row['error_code']}")
+        with col4:
+            if row["is_recovered"] == 1:
+                st.success("✅ Recovered")
+            else:
+                # Load AI diagnosis if available (optional)
+                st.info("⏳ Pending")
+        with col5:
+            if row["is_recovered"] == 0:
+                # Single Recover Button (Legacy support)
+                if st.button("🚀 Recover", key=f"btn_{row['id']}", type="primary"):
+                    with st.spinner("Processing..."):
+                        success, msg = service.recover(row["id"], row["amount"]/100, row["customer_email"])
+                    if success:
+                        show_toast(f"✅ Recovered ₹{row['amount']/100:,.0f}! Link: {msg}", "success")
+                        st.rerun()
+                    else:
+                        show_toast(f"❌ Failed: {msg}", "error")
+                        st.rerun()
+
+    # --- Bulk Action Button ---
+    if selected_ids:
+        st.divider()
+        col_b1, col_b2 = st.columns([1, 5])
+        with col_b1:
+            if st.button("🚀 Recover Selected", type="primary", use_container_width=True):
+                progress_bar = st.progress(0, text="Processing recoveries...")
+                success_count = 0
+                total_count = len(selected_ids)
+                
+                for i, txn_id in enumerate(selected_ids):
+                    # Fetch amount and email from df
+                    row = df[df["id"] == txn_id].iloc[0]
+                    success, msg = service.recover(txn_id, row["amount"]/100, row["customer_email"])
+                    if success:
+                        success_count += 1
+                    progress_bar.progress((i + 1) / total_count, text=f"Processing {i+1}/{total_count}")
+                
+                progress_bar.empty()
+                show_toast(f"✅ Successfully recovered {success_count} out of {total_count} transactions!", "success")
+                st.rerun()
+        with col_b2:
+            st.write(f"**{len(selected_ids)}** transactions selected for recovery.")
+
+    # --- Audit Trail (Always visible at bottom) ---
     st.divider()
-    st.caption("🔒 **Defense-only:** Every money action is bounded, explainable, and gated by human approval via this dashboard.")
+    with st.expander("📜 Audit Trail (Last 20 Actions)", expanded=False):
+        audit = get_audit_trail()
+        if audit:
+            st.dataframe(pd.DataFrame(audit))
+        else:
+            st.info("No actions logged yet.")
 
 if __name__ == "__main__":
     main()
