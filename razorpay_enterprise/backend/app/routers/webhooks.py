@@ -1,4 +1,3 @@
-# backend/app/routers/webhooks.py
 import json
 import hmac
 import hashlib
@@ -8,6 +7,8 @@ from app.workers.tasks import process_recovery, recover_subscription
 from app.core.config import settings
 from app.models.transaction import Transaction
 from app.core.database import SessionLocal
+from app.core.idempotency import is_event_processed
+from app.core.logging import logger
 import razorpay
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -56,6 +57,17 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
 
     event = payload.get("event")
     
+    # 4. Fault-Tolerant Deduplication (Redis + PostgreSQL fallback)
+    event_id = (
+        request.headers.get("x-razorpay-event-id") or
+        payload.get("event_id") or
+        payload.get("id") or
+        f"evt_{hashlib.sha256(body).hexdigest()[:20]}"
+    )
+    if is_event_processed(event_id, event_type=event):
+        logger.info("duplicate_webhook_prevented", event_id=event_id, event_type=event)
+        return {"status": "ignored", "reason": "duplicate_event_detected", "event_id": event_id}
+    
     if event == "payment.failed":
         txn_data = payload.get("payload", {}).get("payment", {}).get("entity", {})
         txn_id = txn_data.get("id")
@@ -102,12 +114,11 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
         return {"status": "queued", "txn_id": txn_id}
     
     elif event in ["subscription.halted", "subscription.pending"]:
-        # Feature 1: Failed-Subscription Recovery (Retries Exhausted)
         sub_entity = payload.get("payload", {}).get("subscription", {}).get("entity", {})
         subscription_id = sub_entity.get("id", f"sub_{hashlib.md5(body).hexdigest()[:12]}")
         customer_id = sub_entity.get("customer_id") or "cust_enterprise_001"
         email = payload.get("payload", {}).get("payment", {}).get("entity", {}).get("email") or f"{customer_id}@example.com"
-        amount = sub_entity.get("total_count", 1) * 299900  # Paise
+        amount = sub_entity.get("total_count", 1) * 299900
 
         db = SessionLocal()
         try:
@@ -128,7 +139,6 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
                 db.commit()
         except Exception as db_err:
             db.rollback()
-            print(f"Error persisting subscription {subscription_id}: {db_err}")
         finally:
             db.close()
 
@@ -142,7 +152,6 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
         return {"status": "queued_subscription_recovery", "subscription_id": subscription_id}
 
     elif event in ["payment.captured", "order.paid"]:
-        # Step 4: Webhook to fulfill promises
         pay_data = payload.get("payload", {}).get("payment", {}).get("entity", {})
         customer_id = pay_data.get("customer_id")
         email = pay_data.get("email")
