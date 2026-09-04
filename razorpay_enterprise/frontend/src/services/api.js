@@ -1,70 +1,90 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 
-// 1. Fetch transactions with search and status filtering
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token') || 'demo-key';
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const generateAuthToken = async (merchantId = 'demo_merchant') => {
+  const res = await axios.post(`${API_BASE_URL}/auth/token`, {
+    merchant_id: merchantId,
+    expiry_minutes: 120
+  });
+  if (res.data?.token) {
+    localStorage.setItem('auth_token', res.data.token);
+    localStorage.setItem('merchant_id', res.data.merchant_id);
+  }
+  return res.data;
+};
+
+export const fetchCurrentSession = async () => {
+  const res = await apiClient.get('/auth/me');
+  return res.data;
+};
+
 export const fetchAtRisk = async (search, status = 'pending') => {
   const params = { status };
   if (search) params.search = search;
-  const res = await axios.get(`${API_URL}/transactions/at-risk`, { params });
+  const res = await apiClient.get('/transactions/at-risk', { params });
   return res.data;
 };
 
-// 2. Fetch deep details with AI diagnosis for a transaction
 export const fetchTransactionDetails = async (txnId) => {
-  const res = await axios.get(`${API_URL}/transactions/${txnId}`);
+  const res = await apiClient.get(`/transactions/${txnId}`);
   return res.data;
 };
 
-// 3. Trigger single recovery (returns task_id and direct link)
 export const triggerRecovery = async (txnId) => {
-  const res = await axios.post(`${API_URL}/recover`, { transaction_id: txnId });
+  const res = await apiClient.post('/recover', { transaction_id: txnId });
   return res.data;
 };
 
-// 4. Trigger high-speed batch recovery for multiple transactions
 export const triggerBatchRecovery = async (txnIds) => {
-  const res = await axios.post(`${API_URL}/recover/batch`, { transaction_ids: txnIds });
+  const res = await apiClient.post('/recover/batch', { transaction_ids: txnIds });
   return res.data;
 };
 
-// 5. Poll for recovery status
 export const getRecoveryStatus = async (taskId) => {
-  const res = await axios.get(`${API_URL}/task-status/${taskId}`);
+  const res = await apiClient.get(`/task-status/${taskId}`);
   return res.data;
 };
 
-// 6. Fetch CTO/CEO Observability Metrics
 export const fetchMetrics = async () => {
-  const res = await axios.get(`${API_URL}/metrics`);
+  const res = await apiClient.get('/metrics');
   return res.data;
 };
 
-// 7. Fetch Challenge 2: Shadow Mode (Champion vs Challenger) Metrics
 export const fetchShadowMetrics = async () => {
-  const res = await axios.get(`${API_URL}/shadow/metrics`);
+  const res = await apiClient.get('/shadow/metrics');
   return res.data;
 };
 
-// 8. Challenge 3: Global Kill Switch & Dynamic Rules
 export const fetchSystemConfig = async () => {
-  const res = await axios.get(`${API_URL}/system/config`);
+  const res = await apiClient.get('/system/config');
   return res.data;
 };
 
 export const pauseSystem = async () => {
-  const res = await axios.post(`${API_URL}/system/pause`);
+  const res = await apiClient.post('/system/pause');
   return res.data;
 };
 
 export const resumeSystem = async () => {
-  const res = await axios.post(`${API_URL}/system/resume`);
+  const res = await apiClient.post('/system/resume');
   return res.data;
 };
 
-// 9. Feature 1: Failed-Subscription Recovery
 export const recoverSubscription = async (subscriptionId, customerId, email) => {
-  const res = await axios.post(`${API_URL}/subscriptions/recover`, {
+  const res = await apiClient.post('/subscriptions/recover', {
     subscription_id: subscriptionId,
     customer_id: customerId,
     email: email
@@ -72,28 +92,26 @@ export const recoverSubscription = async (subscriptionId, customerId, email) => 
   return res.data;
 };
 
-// 10. Feature 2: Mandate Retry Sequencer
 export const fetchMandateStatus = async () => {
-  const res = await axios.get(`${API_URL}/mandates/status`);
+  const res = await apiClient.get('/mandates/status');
   return res.data;
 };
 
 export const retryMandate = async (mandateId, force = false) => {
-  const res = await axios.post(`${API_URL}/mandates/retry`, {
+  const res = await apiClient.post('/mandates/retry', {
     mandate_id: mandateId,
     force: force
   });
   return res.data;
 };
 
-// 11. Feature 3: B2B Receivables Chaser
 export const fetchInvoicesChaser = async () => {
-  const res = await axios.get(`${API_URL}/invoices/chaser`);
+  const res = await apiClient.get('/invoices/chaser');
   return res.data;
 };
 
 export const chaseInvoice = async (invoiceId, medium = null, forceStage = null) => {
-  const res = await axios.post(`${API_URL}/invoices/chase`, {
+  const res = await apiClient.post('/invoices/chase', {
     invoice_id: invoiceId,
     medium: medium,
     force_stage: forceStage
@@ -101,16 +119,15 @@ export const chaseInvoice = async (invoiceId, medium = null, forceStage = null) 
   return res.data;
 };
 
-// 12. Feature 4: Hinglish Voice Recovery
 export const previewVoice = async (hinglishText) => {
-  const res = await axios.post(`${API_URL}/voice/preview`, {
+  const res = await apiClient.post('/voice/preview', {
     hinglish_text: hinglishText
   });
   return res.data;
 };
 
 export const dispatchVoiceCall = async (customerPhone, hinglishText, txnId = null) => {
-  const res = await axios.post(`${API_URL}/voice/call`, {
+  const res = await apiClient.post('/voice/call', {
     customer_phone: customerPhone,
     hinglish_text: hinglishText,
     txn_id: txnId
@@ -118,33 +135,33 @@ export const dispatchVoiceCall = async (customerPhone, hinglishText, txnId = nul
   return res.data;
 };
 
-// 13. Feature 5: Promise-to-Pay Tracker
 export const fetchPromises = async () => {
-  const res = await axios.get(`${API_URL}/promises`);
+  const res = await apiClient.get('/promises');
   return res.data;
 };
 
 export const createPromise = async (promisePayload) => {
-  const res = await axios.post(`${API_URL}/promise`, promisePayload);
+  const res = await apiClient.post('/promise', promisePayload);
   return res.data;
 };
 
 export const remindPromise = async (promiseId) => {
-  const res = await axios.post(`${API_URL}/promise/remind`, {
+  const res = await apiClient.post('/promise/remind', {
     promise_id: promiseId
   });
   return res.data;
 };
 
 export const fulfillPromise = async (promiseId) => {
-  const res = await axios.post(`${API_URL}/promise/fulfill`, {
+  const res = await apiClient.post('/promise/fulfill', {
     promise_id: promiseId
   });
   return res.data;
 };
 
+export const queryAssistant = async (query) => {
+  const res = await apiClient.post('/assistant', { query });
+  return res.data;
+};
 
-
-
-
-
+export default apiClient;

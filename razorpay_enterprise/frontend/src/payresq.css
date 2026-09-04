@@ -1,79 +1,98 @@
 /* ==========================================================================
-   PayResQ: Wall Street Obsidian & Champagne Gold (Tier-1 Institutional)
+   PayResQ: Pure White Brand Design System with Black Headings
    ========================================================================== */
 
 :root {
-  /* Obsidian Base Tokens */
-  --obsidian-bg: #090C12;
-  --obsidian-vault: #0E131C;
-  --obsidian-surface: #121824;
-  --obsidian-inner: #0A0E17;
+  /* Primary Action Colors */
+  --rzp-blue: #0C6BF5;
+  --rzp-blue-light: #3395FF;
+  --rzp-blue-dark: #0052CC;
+  --rzp-blue-glow: 0 4px 14px rgba(12, 107, 245, 0.25);
   
-  /* Champagne Gold Accents */
-  --gold-primary: #D4AF37;
-  --gold-light: #F7D774;
-  --gold-dark: #A68018;
-  --gold-border: rgba(212, 175, 55, 0.24);
-  --gold-border-hover: rgba(247, 215, 116, 0.55);
-  --gold-glow: 0 0 16px rgba(212, 175, 55, 0.32);
-  --gold-gradient: linear-gradient(135deg, #FCE082 0%, #E5B824 50%, #B38612 100%);
+  /* Fintech Green / Mint Teal */
+  --rzp-teal: #00A37A;
+  --rzp-teal-light: #00D09C;
+  --rzp-teal-dark: #007A5C;
+  --rzp-teal-glow: 0 4px 12px rgba(0, 163, 122, 0.2);
+
+  /* Clean White Palette Tokens */
+  --rzp-navy-bg: #FFFFFF;
+  --rzp-vault: #FFFFFF;
+  --rzp-surface: #FFFFFF;
+  --rzp-surface-hover: #F8FAFC;
+  --rzp-inner: #F8FAFC;
+  --rzp-border: #E2E8F0;
+  --rzp-border-hover: #0C6BF5;
+  --rzp-border-teal: rgba(0, 163, 122, 0.3);
+
+  /* Gradients */
+  --rzp-gradient: linear-gradient(135deg, #0C6BF5 0%, #0082F6 100%);
+  --rzp-dual-gradient: linear-gradient(135deg, #0C6BF5 0%, #00A37A 100%);
+  --rzp-teal-gradient: linear-gradient(135deg, #00A37A 0%, #00825E 100%);
 
   /* Institutional Banking Gradients */
-  --fin-danger-gradient: linear-gradient(135deg, #E63946 0%, #931B24 100%);
-  --fin-success-gradient: linear-gradient(135deg, #10B981 0%, #065F46 100%);
-  --fin-warning-gradient: linear-gradient(135deg, #F59E0B 0%, #9A3412 100%);
-  --fin-info-gradient: linear-gradient(135deg, #F3BA2F 0%, #997A00 100%);
-  --fin-primary-gradient: var(--gold-gradient);
+  --fin-danger-gradient: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  --fin-success-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --fin-warning-gradient: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  --fin-info-gradient: linear-gradient(135deg, #0C6BF5 0%, #0284C7 100%);
+  --fin-primary-gradient: var(--rzp-gradient);
 
-  /* Typography */
-  --text-primary: #F8FAFC;
-  --text-gold: #F7D774;
-  --text-secondary: #94A3B8;
+  /* Backward Compatibility Aliases */
+  --obsidian-bg: #FFFFFF;
+  --obsidian-vault: #FFFFFF;
+  --obsidian-surface: #FFFFFF;
+  --obsidian-inner: #F8FAFC;
+  --gold-primary: #0C6BF5;
+  --gold-light: #3395FF;
+  --gold-dark: #0052CC;
+  --gold-border: #E2E8F0;
+  --gold-border-hover: #0C6BF5;
+  --gold-glow: 0 4px 14px rgba(12, 107, 245, 0.2);
+  --gold-gradient: var(--rzp-gradient);
+
+  /* Typography - Black Headings and Slate Body */
+  --text-primary: #0F172A;
+  --text-heading: #000000;
+  --text-accent: #0C6BF5;
+  --text-teal: #00A37A;
+  --text-gold: #0C6BF5;
+  --text-secondary: #475569;
   --text-muted: #64748B;
 }
 
-[data-bs-theme="dark"] {
-  --bs-body-bg: var(--obsidian-bg);
-  --bs-body-color: var(--text-primary);
-  --bs-card-bg: var(--obsidian-surface);
+body {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
 }
 
-[data-bs-theme="light"] {
-  --obsidian-bg: #F8FAFC;
-  --obsidian-vault: #FFFFFF;
-  --obsidian-surface: #FFFFFF;
-  --obsidian-inner: #F1F5F9;
-  --gold-border: rgba(166, 128, 24, 0.28);
-  --gold-border-hover: #A68018;
-  --text-primary: #0F172A;
-  --text-gold: #997A00;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
-  --bs-body-bg: #F8FAFC;
-  --bs-body-color: #0F172A;
-  --bs-card-bg: #FFFFFF;
+h1, h2, h3, h4, h5, h6, .card-title, .modal-title, .navbar-brand {
+  color: #000000 !important;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 /* ==========================================================================
    Micro-Animations & Keyframes
    ========================================================================== */
 
-@keyframes pulseGoldGlow {
+@keyframes pulseBlue {
   0% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+    box-shadow: 0 0 0 0 rgba(12, 107, 245, 0.6);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+    box-shadow: 0 0 0 8px rgba(12, 107, 245, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+    box-shadow: 0 0 0 0 rgba(12, 107, 245, 0);
   }
 }
 
 @keyframes modalScaleIn {
   from {
     opacity: 0;
-    transform: scale(0.92) translateY(12px);
+    transform: scale(0.95) translateY(10px);
   }
   to {
     opacity: 1;
@@ -81,40 +100,38 @@
   }
 }
 
-/* Live Gold Pulse Node */
 .live-pulse-node {
   display: inline-block;
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background-color: var(--gold-light);
-  animation: pulseGoldGlow 2.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  background-color: #059669;
+  box-shadow: 0 0 6px rgba(5, 150, 105, 0.4);
+  animation: pulseBlue 2.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 /* ==========================================================================
-   SmallBox Banking Metric Cards (Wall Street Edition)
+   Metric Cards
    ========================================================================== */
 
 .small-box {
   border-radius: 12px;
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5), 0 0 1px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   display: block;
   margin-bottom: 20px;
   position: relative;
-  color: #fff;
+  color: #FFFFFF;
   overflow: hidden;
-  border: 1px solid var(--gold-border);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .small-box:hover {
-  transform: translateY(-5px) scale(1.01);
-  box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.65), var(--gold-glow);
-  border-color: var(--gold-border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
   text-decoration: none;
 }
 
-/* Theme Gradients */
 .small-box.bg-danger {
   background: var(--fin-danger-gradient) !important;
 }
@@ -126,64 +143,58 @@
 }
 .small-box.bg-info {
   background: var(--fin-info-gradient) !important;
-  color: #0A0E17 !important;
-}
-.small-box.bg-info h3,
-.small-box.bg-info p {
-  color: #0A0E17 !important;
 }
 .small-box.bg-primary {
   background: var(--fin-primary-gradient) !important;
-  color: #0A0E17 !important;
 }
 
 .small-box .inner {
-  padding: 20px 22px;
+  padding: 22px 24px;
   position: relative;
   z-index: 2;
 }
 
 .small-box h3 {
   font-size: 2.2rem;
-  font-weight: 900;
+  font-weight: 800;
   margin: 0 0 6px 0;
   white-space: nowrap;
   letter-spacing: -0.5px;
-  font-family: 'Inter', system-ui, sans-serif;
+  color: #FFFFFF !important;
 }
 
 .small-box p {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 0;
   opacity: 0.95;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  color: #FFFFFF !important;
 }
 
 .small-box .icon {
-  color: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.2);
   z-index: 1;
   position: absolute;
   right: 18px;
   top: 14px;
   font-size: 68px;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.35s ease;
+  transition: transform 0.3s ease;
 }
 
 .small-box:hover .icon {
-  transform: scale(1.12) rotate(4deg);
-  color: rgba(247, 215, 116, 0.35);
+  transform: scale(1.08);
 }
 
 .small-box-footer {
-  background-color: rgba(0, 0, 0, 0.28);
-  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(0, 0, 0, 0.15);
+  color: #FFFFFF;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 6px;
-  padding: 7px 0;
+  padding: 8px 0;
   position: relative;
   z-index: 2;
   text-align: center;
@@ -191,17 +202,17 @@
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  transition: background-color 0.2s ease;
 }
 
 .small-box-footer:hover {
-  background-color: rgba(0, 0, 0, 0.42);
-  color: var(--gold-light);
+  background-color: rgba(0, 0, 0, 0.28);
+  color: #FFFFFF;
 }
 
 /* ==========================================================================
-   PayResQ Timeline (Audit Ledger in Gold)
+   PayResQ Timeline (Audit Trail)
    ========================================================================== */
 
 .timeline {
@@ -212,7 +223,7 @@
 
 .timeline::before {
   border-radius: 4px;
-  background-color: var(--gold-border);
+  background-color: #E2E8F0;
   bottom: 0;
   content: "";
   left: 31px;
@@ -228,65 +239,58 @@
 
 .timeline-time-label {
   display: inline-block;
-  font-weight: 800;
-  padding: 5px 14px;
-  border-radius: 6px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 999px;
   font-size: 0.82rem;
   margin-left: 8px;
   margin-bottom: 14px;
   letter-spacing: 0.5px;
-  background: var(--gold-gradient) !important;
-  color: #0A0E17 !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  background: var(--rzp-gradient) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(12, 107, 245, 0.25);
 }
 
 .timeline > div > .bi {
-  background-color: var(--obsidian-surface);
-  border: 1px solid var(--gold-border);
+  background-color: #FFFFFF;
+  border: 2px solid #0C6BF5;
   border-radius: 50%;
-  font-size: 15px;
+  font-size: 14px;
   height: 34px;
   left: 16px;
-  line-height: 34px;
+  line-height: 30px;
   position: absolute;
   text-align: center;
   top: 0;
   width: 34px;
-  color: var(--gold-light);
+  color: #0C6BF5;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.timeline > div:hover > .bi {
-  transform: scale(1.18);
-  border-color: var(--gold-light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .timeline-item {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  border-radius: 10px;
-  background-color: var(--obsidian-surface);
-  border: 1px solid var(--gold-border);
-  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #0F172A;
   margin-left: 62px;
   margin-right: 0;
   margin-top: 0;
   padding: 0;
   position: relative;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .timeline-item:hover {
-  border-color: var(--gold-border-hover);
-  transform: translateX(3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 10px rgba(212, 175, 55, 0.15);
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .timeline-item > .time {
-  color: var(--text-gold);
+  color: #64748B;
   font-weight: 600;
   float: right;
   font-size: 12px;
@@ -294,8 +298,8 @@
 }
 
 .timeline-header {
-  border-bottom: 1px solid var(--gold-border);
-  color: var(--text-primary);
+  border-bottom: 1px solid #F1F5F9;
+  color: #000000 !important;
   font-size: 15px;
   line-height: 1.2;
   margin: 0;
@@ -306,41 +310,45 @@
 .timeline-body {
   padding: 14px 16px;
   font-size: 14px;
-  color: #CBD5E1;
+  color: #334155;
   line-height: 1.5;
 }
 
 .timeline-footer {
   padding: 10px 16px;
-  border-top: 1px solid var(--gold-border);
-  background-color: rgba(0, 0, 0, 0.18);
+  border-top: 1px solid #F1F5F9;
+  background-color: #F8FAFC;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #64748B;
 }
 
 /* ==========================================================================
-   Sidebar & Navigation Styling (Obsidian & Gold)
+   Sidebar & Navigation Styling (Clean White)
    ========================================================================== */
 
 .app-sidebar {
-  width: 255px;
-  background-color: var(--obsidian-vault);
-  border-right: 1px solid var(--gold-border);
+  width: 260px;
+  background-color: #FFFFFF;
+  border-right: 1px solid #E2E8F0;
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  min-height: 100vh;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
   z-index: 1020;
+  overflow-y: auto;
 }
 
 .app-sidebar.collapsed {
-  width: 72px;
+  width: 74px;
 }
 
 .sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 18px;
-  color: var(--text-secondary);
+  padding: 11px 16px;
+  color: #475569;
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
@@ -348,26 +356,24 @@
   margin: 4px 10px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s ease;
 }
 
 .sidebar-nav-item:hover {
-  background-color: rgba(212, 175, 55, 0.08);
-  color: var(--gold-light);
-  border-color: rgba(212, 175, 55, 0.2);
-  transform: translateX(3px);
+  background-color: #F1F5F9;
+  color: #0F172A;
+  transform: translateX(2px);
 }
 
 .sidebar-nav-item.active {
-  background: var(--gold-gradient);
-  color: #0A0E17 !important;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
-  border-color: var(--gold-light);
+  background: var(--rzp-gradient);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(12, 107, 245, 0.3);
 }
 
 .sidebar-nav-item.active i {
-  color: #0A0E17 !important;
+  color: #FFFFFF !important;
 }
 
 /* ==========================================================================
@@ -375,56 +381,63 @@
    ========================================================================== */
 
 .card {
-  background-color: var(--obsidian-surface) !important;
-  border: 1px solid var(--gold-border) !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
 .card-header {
-  border-bottom: 1px solid var(--gold-border) !important;
-  background-color: rgba(0, 0, 0, 0.15) !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background-color: #FFFFFF !important;
 }
 
 .table-hover tbody tr {
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .table-hover tbody tr:hover {
-  background-color: rgba(212, 175, 55, 0.08) !important;
+  background-color: #F8FAFC !important;
 }
 
-/* Custom Gold Button */
+/* Primary Action Button */
 .btn-primary {
-  background: var(--gold-gradient) !important;
-  color: #0A0E17 !important;
+  background: var(--rzp-gradient) !important;
+  color: #FFFFFF !important;
   border: none !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   letter-spacing: 0.3px;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 2px 8px rgba(12, 107, 245, 0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary:hover {
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.55);
+  background: linear-gradient(135deg, #0059E0 0%, #0C6BF5 100%) !important;
+  box-shadow: 0 4px 14px rgba(12, 107, 245, 0.45);
   transform: translateY(-1px);
-  color: #000000 !important;
+  color: #FFFFFF !important;
 }
 
-.btn:active {
-  transform: scale(0.97);
-  transition: transform 0.08s ease;
+.btn-outline-primary {
+  color: #0C6BF5 !important;
+  border-color: #0C6BF5 !important;
+  background: transparent !important;
+}
+
+.btn-outline-primary:hover {
+  background: #0C6BF5 !important;
+  color: #FFFFFF !important;
 }
 
 /* ==========================================================================
-   Modal Animation & Glassmorphism
+   Modal Animation & Styling
    ========================================================================== */
 
 .modal-backdrop-custom {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(9, 12, 18, 0.88);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -433,11 +446,12 @@
 }
 
 .modal-dialog {
-  animation: modalScaleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-content {
-  background-color: var(--obsidian-surface) !important;
-  border: 1px solid var(--gold-border-hover) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), var(--gold-glow) !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  color: #0F172A !important;
 }

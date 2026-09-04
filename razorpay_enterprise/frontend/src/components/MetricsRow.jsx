@@ -59,7 +59,7 @@ export const MetricsRow = ({ metrics, onFilterClick }) => {
       <div className="col-lg-3 col-6">
         <SmallBox
           title={`₹${metrics ? metrics.total_llm_cost.toFixed(4) : '0.004'}`}
-          text="Total AI Cost"
+          text="System Cost"
           theme="info"
           icon="bi-coin"
         />

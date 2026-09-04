@@ -5,15 +5,16 @@ import './payresq.css';
 
 import { DashboardLayout } from './components/DashboardLayout';
 import { MetricsRow } from './components/MetricsRow';
+import { DashboardView } from './components/DashboardView';
 import { TransactionTable } from './components/TransactionTable';
 import { AuditTimeline } from './components/AuditTimeline';
 import { RecoveryModal } from './components/RecoveryModal';
-import { MetricsChart } from './components/MetricsChart';
 import { ShadowModePanel } from './components/ShadowModePanel';
 import { MandateSequencerCard } from './components/MandateSequencerCard';
 import { B2BInvoiceChaserCard } from './components/B2BInvoiceChaserCard';
 import { VoiceRecoveryCard } from './components/VoiceRecoveryCard';
 import { PromiseTrackerCard } from './components/PromiseTrackerCard';
+import { AssistantPanel } from './components/AssistantPanel';
 import {
   fetchAtRisk,
   fetchMetrics,
@@ -112,9 +113,7 @@ export const App = () => {
     }
   };
 
-  // Human-in-the-Loop Recovery from Modal
   const handleConfirmRecovery = async (txnId) => {
-    // Optimistic UI update
     setTransactions(prev => prev.map(t => t.id === txnId ? { ...t, is_recovered: true } : t));
     try {
       let res;
@@ -135,7 +134,6 @@ export const App = () => {
     }
   };
 
-  // Batch Recovery Execution
   const handleBatchRecover = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
@@ -161,11 +159,11 @@ export const App = () => {
       if (isPaused) {
         await resumeSystem();
         setIsPaused(false);
-        notify('✅ System Resumed! Recovery workers and payment dispatches active.', 'success');
+        notify('System Resumed: Recovery workers and payment dispatches active.', 'success');
       } else {
         await pauseSystem();
         setIsPaused(true);
-        notify('🛑 Emergency Stop Engaged! All recovery operations halted immediately.', 'danger');
+        notify('Emergency Stop Engaged: All recovery operations halted immediately.', 'danger');
       }
       loadData();
     } catch (e) {
@@ -246,54 +244,31 @@ export const App = () => {
         </div>
       )}
 
-      {/* Executive SmallBox Metrics Row */}
       <MetricsRow
         metrics={metrics}
         onFilterClick={filter => {
           setStatusFilter(filter);
-          setActiveNav('at-risk');
+          setActiveNav('dashboard');
         }}
       />
 
-      {/* Navigation Router View */}
-      {(activeNav === 'dashboard' || activeNav === 'at-risk') && (
-        <>
-          {/* Real-time Telemetry Chart */}
-          <div className="card card-outline card-primary shadow-sm mb-4" style={{ backgroundColor: '#0c2340', borderColor: '#1e3a5f' }}>
-            <div className="card-header d-flex justify-content-between align-items-center py-3" style={{ borderBottom: '1px solid #1e3a5f' }}>
-              <h3 className="card-title fs-5 fw-bold mb-0 text-white">
-                <i className="bi bi-graph-up text-primary me-2"></i>
-                Real-time Recovery Telemetry
-              </h3>
-              <span className="badge bg-primary">Chart.js Live (4s)</span>
-            </div>
-            <div className="card-body p-3">
-              {metrics?.timeline ? (
-                <MetricsChart timeline={metrics.timeline} />
-              ) : (
-                <div className="text-center py-5 text-muted">Connecting to metrics stream...</div>
-              )}
-            </div>
-          </div>
-
-          {/* Operations Card + Table Component */}
-          <TransactionTable
-            transactions={transactions}
-            onRecoverClick={txn => setModalTxn(txn)}
-            onBatchRecover={handleBatchRecover}
-            selectedIds={selectedIds}
-            onToggleSelect={handleToggleSelect}
-            onSelectAll={handleSelectAll}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            batchLoading={batchLoading}
-          />
-        </>
+      {activeNav === 'dashboard' && (
+        <DashboardView
+          metrics={metrics}
+          transactions={transactions}
+          onRecoverClick={txn => setModalTxn(txn)}
+          onBatchRecover={handleBatchRecover}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
+          onSelectAll={handleSelectAll}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          batchLoading={batchLoading}
+        />
       )}
 
-      {/* Recovered Cases Filter View */}
       {activeNav === 'recovered' && (
         <TransactionTable
           transactions={transactions.filter(t => t.is_recovered)}
@@ -310,27 +285,22 @@ export const App = () => {
         />
       )}
 
-      {/* Shadow Mode View */}
       {activeNav === 'shadow' && (
         <ShadowModePanel data={shadowData} />
       )}
 
-      {/* Mandate Retry Sequencer View */}
       {activeNav === 'mandates' && (
         <MandateSequencerCard mandateData={mandateData} onRetry={handleRetryMandate} />
       )}
 
-      {/* B2B Receivables Chaser View */}
       {activeNav === 'b2b' && (
         <B2BInvoiceChaserCard chaserData={chaserData} onChase={handleChaseInvoice} />
       )}
 
-      {/* Hinglish Voice Recovery View */}
       {activeNav === 'voice' && (
         <VoiceRecoveryCard />
       )}
 
-      {/* Promise-to-Pay Tracker View */}
       {activeNav === 'promises' && (
         <PromiseTrackerCard
           promiseData={promiseData}
@@ -340,34 +310,18 @@ export const App = () => {
         />
       )}
 
-      {/* Dashboard View - Include Shadow Analysis, Mandate Sequencer, B2B Chaser, Voice Station & PTP */}
-      {activeNav === 'dashboard' && (
-        <>
-          <ShadowModePanel data={shadowData} />
-          <MandateSequencerCard mandateData={mandateData} onRetry={handleRetryMandate} />
-          <B2BInvoiceChaserCard chaserData={chaserData} onChase={handleChaseInvoice} />
-          <VoiceRecoveryCard />
-          <PromiseTrackerCard
-            promiseData={promiseData}
-            onCreate={handleCreatePromise}
-            onRemind={handleRemindPromise}
-            onFulfill={handleFulfillPromise}
-          />
-        </>
-      )}
-
-      {/* Audit Trail Timeline View */}
-      {(activeNav === 'dashboard' || activeNav === 'audit') && (
+      {activeNav === 'audit' && (
         <AuditTimeline />
       )}
 
-      {/* Human-in-the-Loop Recovery Confirmation Modal */}
       <RecoveryModal
         show={Boolean(modalTxn)}
         txn={modalTxn}
         onHide={() => setModalTxn(null)}
         onConfirm={handleConfirmRecovery}
       />
+
+      <AssistantPanel onRecoveryCompleted={loadData} />
     </DashboardLayout>
   );
 };
