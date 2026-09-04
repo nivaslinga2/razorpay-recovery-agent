@@ -22,10 +22,6 @@ def get_escalation_stage(days_overdue: int, reminders_sent: dict) -> dict:
     return REMINDER_SCHEDULE[-1] if days_overdue >= 14 else REMINDER_SCHEDULE[0]
 
 def chase_invoice(invoice_id: str, medium: str = None, force_stage: int = None, db = None) -> dict:
-    """
-    Feature 3: B2B Receivables Chaser.
-    Resends invoice reminder with payment link via Razorpay POST /invoices/{inv_id}/notify_by/{medium}.
-    """
     owns_db = False
     if db is None:
         db = SessionLocal()
@@ -49,13 +45,11 @@ def chase_invoice(invoice_id: str, medium: str = None, force_stage: int = None, 
 
         dispatch_medium = medium or stage["medium"]
 
-        # Call official Razorpay Invoices API: POST /invoices/{inv_id}/notify_by/{medium}
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
         try:
             client.invoice.notify_by(invoice_id, dispatch_medium)
             api_status = "NOTIFIED_VIA_RAZORPAY_API"
         except Exception:
-            # Fallback if invoice is a synthetic test record in sandbox
             api_status = "DISPATCHED_SANDBOX"
 
         short_url = inv.short_url or f"https://rzp.io/i/inv_{invoice_id[:8]}"
@@ -66,15 +60,12 @@ def chase_invoice(invoice_id: str, medium: str = None, force_stage: int = None, 
             link=short_url
         )
 
-        # Update reminder history
         reminders[str(stage["day"])] = True
         inv.reminders_sent = reminders
         inv.last_chased_at = datetime.utcnow()
         inv.last_medium_used = dispatch_medium
         inv.status = "overdue_chased"
         db.commit()
-
-        print(f"📢 [B2B Chaser Dispatched via {dispatch_medium.upper()} to {inv.customer_email}]: {formatted_message}")
 
         return {
             "status": "SUCCESS",

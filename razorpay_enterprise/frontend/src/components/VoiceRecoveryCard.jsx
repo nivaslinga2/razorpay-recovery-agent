@@ -4,7 +4,7 @@ import { previewVoice, dispatchVoiceCall } from '../services/api';
 const TEMPLATES = [
   {
     title: 'Card Declined',
-    text: 'Namaste! Main Razorpay PayResQ se call kar raha hoon. Aapka payment bank card decline hone ke kaaran incomplete reh gaya tha. Kripya naye link par click karke dusre card ya UPI se payment complete karein.'
+    text: 'Namaste! Main PayResQ se call kar raha hoon. Aapka payment bank card decline hone ke kaaran incomplete reh gaya tha. Kripya naye link par click karke dusre card ya UPI se payment complete karein.'
   },
   {
     title: 'Bank Low Balance',
@@ -30,9 +30,8 @@ export const VoiceRecoveryCard = () => {
     setNotification(null);
     try {
       const res = await previewVoice(script);
-      // In dev, API is proxied through Vite or port 8000
       setAudioUrl(`http://localhost:8000${res.audio_url}`);
-      setNotification({ type: 'success', message: 'Audio synthesized successfully via Google TTS!' });
+      setNotification({ type: 'success', message: 'Audio preview ready.' });
     } catch (e) {
       setNotification({ type: 'danger', message: `TTS Error: ${e.message}` });
     } finally {
@@ -59,22 +58,22 @@ export const VoiceRecoveryCard = () => {
   };
 
   return (
-    <div className="card shadow-sm mb-4" style={{ backgroundColor: 'var(--obsidian-surface)', borderColor: 'var(--gold-border)' }}>
+    <div className="card shadow-sm mb-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }}>
       {/* Header */}
-      <div className="card-header d-flex justify-content-between align-items-center py-3" style={{ borderBottom: '1px solid var(--gold-border)' }}>
+      <div className="card-header d-flex justify-content-between align-items-center py-3" 
+           style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
         <div className="d-flex align-items-center gap-2">
-          <i className="bi bi-telephone-outbound-fill text-warning fs-5"></i>
+          <div className="p-1 px-2 rounded" style={{ backgroundColor: 'rgba(12, 107, 245, 0.08)' }}>
+            <i className="bi bi-telephone-outbound-fill text-primary fs-5"></i>
+          </div>
           <div>
-            <h3 className="card-title fs-5 fw-bold mb-0 text-white">Feature 4: Hinglish Voice Recovery</h3>
-            <span className="text-secondary small">Text-to-Speech Engine + Twilio / Exotel Outbound Voice Calling</span>
+            <h3 className="card-title fs-5 fw-bold mb-0" style={{ color: '#000000' }}>Voice Recovery Station</h3>
+            <span className="small text-muted">Outbound customer recovery calling</span>
           </div>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <span className="badge bg-primary px-3 py-2 fw-bold">
-            <i className="bi bi-soundwave me-1"></i>gTTS Hindi Engine
-          </span>
-          <span className="badge bg-success px-3 py-2 fw-bold">
-            <i className="bi bi-broadcast me-1"></i>Twilio Voice Ready
+          <span className="badge px-3 py-2 fw-bold" style={{ backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0' }}>
+            <i className="bi bi-telephone-fill me-1"></i>Voice Gateway Online
           </span>
         </div>
       </div>
@@ -83,23 +82,23 @@ export const VoiceRecoveryCard = () => {
         {notification && (
           <div className={`alert alert-${notification.type} alert-dismissible fade show mb-4 small`} role="alert">
             {notification.message}
-            <button type="button" className="btn-close btn-close-white" onClick={() => setNotification(null)}></button>
+            <button type="button" className="btn-close" onClick={() => setNotification(null)}></button>
           </div>
         )}
 
         {/* Quick Template Picker */}
         <div className="mb-3">
-          <label className="form-label text-secondary small fw-bold text-uppercase">
-            <i className="bi bi-stars text-warning me-1"></i>Select Voice Recovery Template:
+          <label className="form-label small fw-bold text-uppercase" style={{ color: '#64748B', letterSpacing: '0.6px' }}>
+            Select Voice Recovery Template:
           </label>
           <div className="d-flex gap-2 flex-wrap">
             {TEMPLATES.map((t, idx) => (
               <button
                 key={idx}
                 type="button"
-                className="btn btn-sm btn-outline-secondary text-light px-3 py-1"
+                className="btn btn-sm btn-outline-secondary px-3 py-1"
                 onClick={() => setScript(t.text)}
-                style={{ borderColor: 'var(--gold-border)' }}
+                style={{ borderColor: '#E2E8F0', backgroundColor: '#F8FAFC', color: '#0F172A' }}
               >
                 {t.title}
               </button>
@@ -110,25 +109,25 @@ export const VoiceRecoveryCard = () => {
         {/* Main Grid: Script Editor + Phone Input */}
         <div className="row g-3 mb-4">
           <div className="col-md-8">
-            <label className="form-label text-secondary small fw-bold text-uppercase">Hinglish Call Script:</label>
+            <label className="form-label small fw-bold text-uppercase" style={{ color: '#64748B' }}>Hinglish Call Script:</label>
             <textarea
               className="form-control font-monospace"
               rows="4"
               value={script}
               onChange={e => setScript(e.target.value)}
               style={{
-                backgroundColor: 'var(--obsidian-vault)',
-                borderColor: 'var(--gold-border)',
-                color: '#f8fafc',
+                backgroundColor: '#FFFFFF',
+                borderColor: '#CBD5E1',
+                color: '#0F172A',
                 fontSize: '13px'
               }}
             />
           </div>
           <div className="col-md-4 d-flex flex-column justify-content-between">
             <div>
-              <label className="form-label text-secondary small fw-bold text-uppercase">Customer Phone Number:</label>
+              <label className="form-label small fw-bold text-uppercase" style={{ color: '#64748B' }}>Customer Phone Number:</label>
               <div className="input-group mb-3">
-                <span className="input-group-text bg-dark border-secondary text-secondary">
+                <span className="input-group-text" style={{ backgroundColor: '#F8FAFC', borderColor: '#CBD5E1', color: '#0C6BF5' }}>
                   <i className="bi bi-phone"></i>
                 </span>
                 <input
@@ -137,9 +136,9 @@ export const VoiceRecoveryCard = () => {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   style={{
-                    backgroundColor: 'var(--obsidian-vault)',
-                    borderColor: 'var(--gold-border)',
-                    color: '#f8fafc'
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#CBD5E1',
+                    color: '#0F172A'
                   }}
                 />
               </div>
@@ -148,7 +147,7 @@ export const VoiceRecoveryCard = () => {
             {/* Action Buttons */}
             <div className="d-flex flex-column gap-2">
               <button
-                className="btn btn-outline-warning fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
+                className="btn btn-outline-primary fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
                 onClick={handleSynthesize}
                 disabled={loadingAudio}
               >
@@ -160,7 +159,7 @@ export const VoiceRecoveryCard = () => {
                 ) : (
                   <>
                     <i className="bi bi-headphones"></i>
-                    <span>🎧 Synthesize & Preview Audio</span>
+                    <span>Synthesize & Preview Audio</span>
                   </>
                 )}
               </button>
@@ -178,7 +177,7 @@ export const VoiceRecoveryCard = () => {
                 ) : (
                   <>
                     <i className="bi bi-telephone-outbound-fill"></i>
-                    <span>📞 Call Customer Now</span>
+                    <span>Call Customer Now</span>
                   </>
                 )}
               </button>
@@ -189,13 +188,15 @@ export const VoiceRecoveryCard = () => {
         {/* Audio Player & Call Telemetry */}
         {audioUrl && (
           <div className="p-3 rounded border mb-3 d-flex flex-column gap-2"
-               style={{ backgroundColor: 'var(--obsidian-vault)', borderColor: 'var(--gold-border)' }}>
+               style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
             <div className="d-flex align-items-center justify-content-between">
               <div className="d-flex align-items-center gap-2">
-                <i className="bi bi-volume-up-fill text-warning fs-5"></i>
-                <span className="fw-bold text-white small">Synthesized Audio Stream:</span>
+                <i className="bi bi-volume-up-fill text-primary fs-5"></i>
+                <span className="fw-bold small" style={{ color: '#000000' }}>Synthesized Audio Stream:</span>
               </div>
-              <span className="badge bg-success font-monospace">Audio Format: MP3 (24kHz)</span>
+              <span className="badge font-monospace" style={{ backgroundColor: '#059669', color: '#FFFFFF', fontWeight: 'bold' }}>
+                Audio Format: MP3 (24kHz)
+              </span>
             </div>
             <audio controls src={audioUrl} autoPlay className="w-100 mt-2" style={{ height: '40px' }} />
           </div>
@@ -204,14 +205,14 @@ export const VoiceRecoveryCard = () => {
         {/* Call Telemetry Card */}
         {callLog && (
           <div className="p-3 rounded border font-monospace small"
-               style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', borderColor: '#10B981' }}>
-            <div className="d-flex justify-content-between text-success fw-bold mb-1">
+               style={{ backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }}>
+            <div className="d-flex justify-content-between fw-bold mb-1" style={{ color: '#059669' }}>
               <span><i className="bi bi-check-circle-fill me-1"></i>Outbound Voice Call Dispatched</span>
               <span className="badge bg-success">{callLog.status}</span>
             </div>
-            <div className="text-light">Call SID: <span className="text-warning">{callLog.call_sid}</span></div>
-            <div className="text-light">Recipient: <span className="text-white">{callLog.customer_phone}</span></div>
-            <div className="text-light">Delivery Channel: <span className="badge bg-dark border border-secondary">{callLog.delivery_channel}</span></div>
+            <div className="text-dark">Call SID: <span className="text-primary">{callLog.call_sid}</span></div>
+            <div className="text-dark">Recipient: <span className="fw-bold">{callLog.customer_phone}</span></div>
+            <div className="text-dark">Delivery Channel: <span className="badge bg-secondary">{callLog.delivery_channel}</span></div>
           </div>
         )}
       </div>

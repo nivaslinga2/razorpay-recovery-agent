@@ -8,35 +8,24 @@ AUDIO_DIR = Path("/tmp/voice_audio")
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 def text_to_hinglish_voice(hinglish_text: str) -> str:
-    """
-    Step 1: Convert Hinglish text to spoken voice audio using gTTS (Hindi engine).
-    Hindi TTS engines naturally pronounce phonetic Hinglish vocabulary accurately.
-    """
     clean_filename = f"voice_{uuid.uuid4().hex[:12]}.mp3"
     audio_path = AUDIO_DIR / clean_filename
     
-    # Generate MP3 using Google Text-to-Speech
     tts = gTTS(text=hinglish_text, lang="hi", slow=False)
     tts.save(str(audio_path))
     
     return clean_filename
 
 def send_voice_recovery(customer_phone: str, hinglish_text: str, txn_id: str = None) -> dict:
-    """
-    Step 2 & 3: Deliver Hinglish voice message via Voice API (Twilio / Exotel / Local Stream).
-    """
-    # 0. Global Kill Switch
     if get_config("is_paused", "false").lower() == "true":
         return {
             "status": "PAUSED",
-            "message": "🛑 Global Kill Switch Engaged. Outbound voice calling is halted."
+            "message": "Global Kill Switch Engaged. Outbound voice calling is halted."
         }
 
-    # Generate the actual audio file
     filename = text_to_hinglish_voice(hinglish_text)
     audio_stream_url = f"/api/voice/play/{filename}"
 
-    # Twilio / Exotel dispatch logic
     twilio_sid = os.getenv("TWILIO_ACCOUNT_SID")
     twilio_token = os.getenv("TWILIO_AUTH_TOKEN")
     twilio_from = os.getenv("TWILIO_PHONE", "+18005550199")
@@ -55,11 +44,8 @@ def send_voice_recovery(customer_phone: str, hinglish_text: str, txn_id: str = N
             )
             call_sid = call.sid
             delivery_channel = "TWILIO_VOICE_LIVE"
-        except Exception as e:
-            print(f"Twilio Voice dispatch notice: {e}. Falling back to sandbox stream.")
+        except Exception:
             delivery_channel = "VOICE_SANDBOX_STREAM"
-
-    print(f"📞 [Hinglish Outbound Voice Call to {customer_phone}]: Call SID={call_sid} | Audio={audio_stream_url}")
 
     return {
         "status": "QUEUED_AND_DIALING",

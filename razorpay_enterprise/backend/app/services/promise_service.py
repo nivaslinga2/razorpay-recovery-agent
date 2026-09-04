@@ -7,10 +7,6 @@ from app.core.database import SessionLocal
 def record_promise(customer_id: str, customer_name: str, customer_email: str, 
                    amount: int, promised_date: datetime, customer_phone: str = None, 
                    notes: str = None, db = None) -> dict:
-    """
-    Step 2: Capture promise from customer interaction.
-    Records the commitment date and amount, deferring aggressive automated retries until the promised date.
-    """
     owns_db = False
     if db is None:
         db = SessionLocal()
@@ -33,8 +29,6 @@ def record_promise(customer_id: str, customer_name: str, customer_email: str,
         db.add(record)
         db.commit()
 
-        print(f"🤝 [Promise-to-Pay Logged]: ID={promise_id} | Customer={customer_name} ({customer_id}) | Amount=₹{amount/100:,.0f} | Date={promised_date.strftime('%Y-%m-%d')}")
-
         return {
             "status": "RECORDED",
             "promise_id": promise_id,
@@ -49,10 +43,6 @@ def record_promise(customer_id: str, customer_name: str, customer_email: str,
             db.close()
 
 def send_promise_reminder(promise_id: str, db = None) -> dict:
-    """
-    Step 3: Scheduled reminder.
-    Dispatches polite Hinglish reminder if payment has not been received by the promised date.
-    """
     owns_db = False
     if db is None:
         db = SessionLocal()
@@ -69,11 +59,9 @@ def send_promise_reminder(promise_id: str, db = None) -> dict:
         now = datetime.utcnow()
         amt_rs = record.amount / 100.0
 
-        # Check if overdue by 2+ days
         if now > (record.promised_date + timedelta(days=2)):
             record.status = "BROKEN"
-            escalate_msg = f"⚠️ [Escalated to Merchant]: Customer {record.customer_name} ({record.customer_id}) broke promise to pay ₹{amt_rs:,.0f} on {record.promised_date.strftime('%Y-%m-%d')}."
-            print(escalate_msg)
+            escalate_msg = f"Escalated to Merchant: Customer {record.customer_name} ({record.customer_id}) broke promise to pay on {record.promised_date.strftime('%Y-%m-%d')}."
             record.reminders_sent += 1
             db.commit()
             return {
@@ -83,9 +71,7 @@ def send_promise_reminder(promise_id: str, db = None) -> dict:
                 "message": escalate_msg
             }
 
-        # Friendly Hinglish reminder
         msg = f"Namaste {record.customer_name}! Aapne ₹{amt_rs:,.0f} kal dene ka kaha tha. Kripya naye payment link par click karke payment poora karein: https://rzp.io/i/{record.promise_id[:8]}"
-        print(f"📱 [PTP Reminder Dispatched to {record.customer_phone}]: {msg}")
 
         record.reminders_sent += 1
         db.commit()
@@ -102,10 +88,6 @@ def send_promise_reminder(promise_id: str, db = None) -> dict:
             db.close()
 
 def fulfill_promise(customer_id: str = None, email: str = None, amount: int = None, db = None) -> int:
-    """
-    Step 4: Webhook fulfillment.
-    Matches incoming payment capture to active promise and marks as FULFILLED.
-    """
     owns_db = False
     if db is None:
         db = SessionLocal()
@@ -124,7 +106,6 @@ def fulfill_promise(customer_id: str = None, email: str = None, amount: int = No
             r.status = "FULFILLED"
             r.fulfilled_at = datetime.utcnow()
             fulfilled_count += 1
-            print(f"✅ [Promise Fulfilled]: Promise ID {r.promise_id} for {r.customer_name} marked as FULFILLED.")
         
         if fulfilled_count > 0:
             db.commit()

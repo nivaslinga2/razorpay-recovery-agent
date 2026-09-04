@@ -13,26 +13,16 @@ def get_ist_time() -> datetime:
     return datetime.utcnow() + timedelta(hours=5, minutes=30)
 
 def should_retry_mandate(mandate_state: MandateState, allow_force: bool = False) -> tuple[bool, str]:
-    """
-    Feature 2: Smart Retry Sequencer for e-mandates (UPI Autopay, NACH).
-    Guarantees optimal retry timing:
-    1. Maximum 3 retries limit.
-    2. Bank working clearing hours only (09:00 - 17:00 IST).
-    3. Mandatory 4-hour cooldown between attempts to prevent bank spamming and bounce penalties.
-    """
     if allow_force:
         return True, "READY_FORCE"
 
-    # Step 1: Check retry count ceiling
     if mandate_state.retry_count >= mandate_state.max_retries:
         return False, "MAX_RETRIES_EXHAUSTED"
 
-    # Step 2: Check Indian Banking Hours (09:00 - 17:00 IST)
     now_ist = get_ist_time()
     if now_ist.hour < mandate_state.bank_working_hours[0] or now_ist.hour >= mandate_state.bank_working_hours[1]:
         return False, "OUTSIDE_BANK_HOURS"
 
-    # Step 3: Check 4-Hour Cooldown Window
     if mandate_state.last_attempt:
         hours_since_last = (now_ist - mandate_state.last_attempt).total_seconds() / 3600.0
         if hours_since_last < 4.0:

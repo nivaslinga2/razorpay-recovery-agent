@@ -56,19 +56,22 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
   };
 
   return (
-    <div className="card shadow-sm mb-4" style={{ backgroundColor: 'var(--obsidian-surface)', borderColor: 'var(--gold-border)' }}>
+    <div className="card shadow-sm mb-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }}>
       {/* Header */}
-      <div className="card-header d-flex justify-content-between align-items-center py-3" style={{ borderBottom: '1px solid var(--gold-border)' }}>
+      <div className="card-header d-flex justify-content-between align-items-center py-3" 
+           style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
         <div className="d-flex align-items-center gap-2">
-          <i className="bi bi-calendar-check-fill text-warning fs-5"></i>
+          <div className="p-1 px-2 rounded" style={{ backgroundColor: 'rgba(12, 107, 245, 0.08)' }}>
+            <i className="bi bi-calendar-check-fill text-primary fs-5"></i>
+          </div>
           <div>
-            <h3 className="card-title fs-5 fw-bold mb-0 text-white">Feature 5: Promise-to-Pay Tracker</h3>
-            <span className="text-secondary small">Customer Commitment Tracking, Automated Reminders & Escalation</span>
+            <h3 className="card-title fs-5 fw-bold mb-0" style={{ color: '#000000' }}>Promise-to-Pay Commitment Tracker</h3>
+            <span className="small text-muted">Customer payment commitments and scheduled reminders</span>
           </div>
         </div>
         <div className="d-flex align-items-center gap-2">
           <button
-            className="btn btn-sm btn-outline-warning fw-bold d-flex align-items-center gap-1"
+            className="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1 shadow-sm"
             onClick={() => setShowForm(!showForm)}
           >
             <i className={`bi bi-${showForm ? 'dash-circle' : 'plus-circle-fill'}`}></i>
@@ -81,25 +84,25 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
         {/* Metric Badges */}
         <div className="row g-3 mb-4">
           <div className="col-md-3 col-6">
-            <div className="p-3 rounded border" style={{ backgroundColor: 'var(--obsidian-vault)', borderColor: 'var(--gold-border)' }}>
-              <div className="text-secondary small text-uppercase fw-bold">Active Commitments</div>
-              <div className="fs-4 fw-bold text-white font-monospace">{promiseData.total_promises}</div>
+            <div className="p-3 rounded border" style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+              <div className="small text-uppercase fw-bold" style={{ color: '#64748B' }}>Active Commitments</div>
+              <div className="fs-4 fw-bold font-monospace" style={{ color: '#000000' }}>{promiseData.total_promises}</div>
             </div>
           </div>
           <div className="col-md-3 col-6">
-            <div className="p-3 rounded border" style={{ backgroundColor: 'var(--obsidian-vault)', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
+            <div className="p-3 rounded border" style={{ backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }}>
               <div className="text-warning small text-uppercase fw-bold">Pending Payment</div>
               <div className="fs-4 fw-bold text-warning font-monospace">{promiseData.pending_count}</div>
             </div>
           </div>
           <div className="col-md-3 col-6">
-            <div className="p-3 rounded border" style={{ backgroundColor: 'var(--obsidian-vault)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
+            <div className="p-3 rounded border" style={{ backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }}>
               <div className="text-success small text-uppercase fw-bold">Fulfilled via Webhook</div>
-              <div className="fs-4 fw-bold text-success font-monospace">{promiseData.fulfilled_count}</div>
+              <div className="fs-4 fw-bold font-monospace text-success">{promiseData.fulfilled_count}</div>
             </div>
           </div>
           <div className="col-md-3 col-6">
-            <div className="p-3 rounded border" style={{ backgroundColor: 'var(--obsidian-vault)', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+            <div className="p-3 rounded border" style={{ backgroundColor: '#FEF2F2', borderColor: '#FECACA' }}>
               <div className="text-danger small text-uppercase fw-bold">Broken / Escalated</div>
               <div className="fs-4 fw-bold text-danger font-monospace">{promiseData.broken_count}</div>
             </div>
@@ -109,41 +112,50 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
         {/* New Promise Form */}
         {showForm && (
           <form onSubmit={handleSubmit} className="p-4 rounded border mb-4"
-                style={{ backgroundColor: 'var(--obsidian-vault)', borderColor: 'var(--gold-border)' }}>
-            <h6 className="text-warning fw-bold mb-3"><i className="bi bi-person-plus-fill me-2"></i>Capture Customer Promise-to-Pay</h6>
+                style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: '#000000' }}>
+              <i className="bi bi-person-plus-fill text-primary"></i>
+              <span>Capture Customer Promise-to-Pay</span>
+            </h6>
             <div className="row g-3">
               <div className="col-md-3">
-                <label className="form-label text-secondary small">Customer Name</label>
-                <input type="text" className="form-control form-control-sm text-light bg-dark border-secondary"
+                <label className="form-label small" style={{ color: '#64748B' }}>Customer Name</label>
+                <input type="text" className="form-control form-control-sm text-dark"
+                       style={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }}
                        value={custName} onChange={e => setCustName(e.target.value)} required />
               </div>
               <div className="col-md-3">
-                <label className="form-label text-secondary small">Customer ID</label>
-                <input type="text" className="form-control form-control-sm text-light bg-dark border-secondary"
+                <label className="form-label small" style={{ color: '#64748B' }}>Customer ID</label>
+                <input type="text" className="form-control form-control-sm text-dark"
+                       style={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }}
                        value={custId} onChange={e => setCustId(e.target.value)} required />
               </div>
               <div className="col-md-2">
-                <label className="form-label text-secondary small">Amount (₹)</label>
-                <input type="number" className="form-control form-control-sm text-light bg-dark border-secondary font-monospace"
+                <label className="form-label small" style={{ color: '#64748B' }}>Amount (₹)</label>
+                <input type="number" className="form-control form-control-sm text-dark font-monospace"
+                       style={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }}
                        value={amount} onChange={e => setAmount(e.target.value)} required />
               </div>
               <div className="col-md-2">
-                <label className="form-label text-secondary small">Promised Date</label>
-                <input type="date" className="form-control form-control-sm text-light bg-dark border-secondary"
+                <label className="form-label small" style={{ color: '#64748B' }}>Promised Date</label>
+                <input type="date" className="form-control form-control-sm text-dark"
+                       style={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }}
                        value={date} onChange={e => setDate(e.target.value)} required />
               </div>
               <div className="col-md-2">
-                <label className="form-label text-secondary small">Phone</label>
-                <input type="text" className="form-control form-control-sm text-light bg-dark border-secondary"
+                <label className="form-label small" style={{ color: '#64748B' }}>Phone</label>
+                <input type="text" className="form-control form-control-sm text-dark"
+                       style={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }}
                        value={phone} onChange={e => setPhone(e.target.value)} />
               </div>
               <div className="col-12">
-                <label className="form-label text-secondary small">Call / Interaction Notes</label>
-                <input type="text" className="form-control form-control-sm text-light bg-dark border-secondary"
+                <label className="form-label small" style={{ color: '#64748B' }}>Call / Interaction Notes</label>
+                <input type="text" className="form-control form-control-sm text-dark"
+                       style={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1' }}
                        value={notes} onChange={e => setNotes(e.target.value)} />
               </div>
               <div className="col-12 text-end">
-                <button type="submit" className="btn btn-sm btn-warning fw-bold px-4" disabled={submitting}>
+                <button type="submit" className="btn btn-sm btn-primary fw-bold px-4" disabled={submitting}>
                   {submitting ? 'Logging...' : 'Save Promise'}
                 </button>
               </div>
@@ -153,8 +165,8 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
 
         {/* Promises Table */}
         <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0" style={{ color: '#cbd5e1' }}>
-            <thead className="small text-uppercase text-secondary" style={{ borderBottom: '1px solid var(--gold-border)' }}>
+          <table className="table table-hover align-middle mb-0" style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}>
+            <thead className="small text-uppercase" style={{ color: '#64748B', borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
               <tr>
                 <th>Promise ID & Customer</th>
                 <th>Promised Amount</th>
@@ -175,17 +187,17 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
                 return (
                   <tr key={p.promise_id}>
                     <td>
-                      <span className="font-monospace text-white fw-bold d-block">{p.promise_id}</span>
-                      <span className="text-warning small fw-bold">{p.customer_name}</span>
+                      <span className="font-monospace fw-bold d-block" style={{ color: '#000000' }}>{p.promise_id}</span>
+                      <span className="small fw-bold text-primary">{p.customer_name}</span>
                       <div className="text-muted" style={{ fontSize: '11px' }}>{p.customer_phone}</div>
                     </td>
-                    <td className="text-white font-monospace fw-bold fs-6">
+                    <td className="font-monospace fw-bold fs-6" style={{ color: '#000000' }}>
                       ₹{p.amount?.toLocaleString()}
                     </td>
                     <td>
-                      <div className="text-light small">{p.promised_date}</div>
+                      <div className="small text-dark">{p.promised_date}</div>
                       {isPending && (
-                        <span className={`badge ${p.days_until_promised > 0 ? 'bg-info text-dark' : p.days_until_promised === 0 ? 'bg-warning text-dark' : 'bg-danger'}`}>
+                        <span className={`badge ${p.days_until_promised > 0 ? 'bg-primary' : p.days_until_promised === 0 ? 'bg-warning text-dark' : 'bg-danger'}`}>
                           {p.days_until_promised > 0 ? `In ${p.days_until_promised} days` : p.days_until_promised === 0 ? 'Due Today' : `${Math.abs(p.days_until_promised)}d Overdue`}
                         </span>
                       )}
@@ -196,12 +208,12 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
                       </span>
                     </td>
                     <td>
-                      <span className="badge bg-dark border border-secondary text-secondary">
+                      <span className="badge bg-light text-muted border font-monospace" style={{ borderColor: '#E2E8F0' }}>
                         {p.reminders_sent} Sent
                       </span>
                     </td>
                     <td style={{ maxWidth: '200px' }}>
-                      <span className="text-muted small text-truncate d-block" title={p.notes}>
+                      <span className="small text-truncate d-block text-muted" title={p.notes}>
                         {p.notes || '—'}
                       </span>
                     </td>
@@ -210,7 +222,7 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
                         {isPending && (
                           <>
                             <button
-                              className="btn btn-sm btn-outline-warning py-1 px-2 small d-inline-flex align-items-center gap-1"
+                              className="btn btn-sm btn-outline-primary py-1 px-2 small d-inline-flex align-items-center gap-1"
                               disabled={isExecuting}
                               onClick={() => handleRemindAction(p.promise_id)}
                               title="Send courteous Hinglish reminder"
@@ -219,7 +231,7 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
                               <span>Remind</span>
                             </button>
                             <button
-                              className="btn btn-sm btn-success py-1 px-2 small d-inline-flex align-items-center gap-1"
+                              className="btn btn-sm btn-success py-1 px-2 small d-inline-flex align-items-center gap-1 fw-bold"
                               disabled={isExecuting}
                               onClick={() => handleFulfillAction(p.promise_id)}
                               title="Mark as paid / fulfilled"
@@ -230,12 +242,12 @@ export const PromiseTrackerCard = ({ promiseData, onCreate, onRemind, onFulfill 
                           </>
                         )}
                         {isFulfilled && (
-                          <span className="badge bg-success bg-opacity-25 text-success border border-success px-2 py-1">
+                          <span className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">
                             ✓ Payment Captured
                           </span>
                         )}
                         {isBroken && (
-                          <span className="badge bg-danger bg-opacity-25 text-danger border border-danger px-2 py-1">
+                          <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">
                             ⚠️ Escalated
                           </span>
                         )}
