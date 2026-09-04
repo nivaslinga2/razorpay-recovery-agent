@@ -1,11 +1,72 @@
 import os
 import json
-from celery import Celery
+from celery import Celery, Task
+from celery.signals import worker_shutting_down, worker_shutdown
 from app.core.config import settings
 from app.services.diagnosis import diagnose_transaction
+from app.core.database import SessionLocal
+from app.models.dlq import DeadLetterQueue
+from app.core.tracing import trace_span
+from app.services.shadow import persist_shadow_decision
 import razorpay
+import traceback
 
 celery_app = Celery("worker", broker=settings.REDIS_URL)
+
+# 1. Graceful Shutdown Handlers (Kubernetes SIGTERM / Docker stop compliance)
+@worker_shutting_down.connect
+def on_worker_shutting_down(sig, how, exitcode, **kwargs):
+    print(f"🛑 [Celery] Received termination signal ({sig}). Completing in-flight recovery tasks...")
+
+@worker_shutdown.connect
+def on_worker_shutdown(**kwargs):
+    print("🛑 [Celery] In-flight recovery tasks flushed. Graceful shutdown finished.")
+
+def extract_retry_after(exc) -> int:
+    """Extracts Razorpay/HTTP Retry-After duration in seconds to respect rate limits."""
+    if hasattr(exc, "response") and exc.response is not None:
+        headers = getattr(exc.response, "headers", {})
+        val = headers.get("Retry-After") or headers.get("retry-after")
+        if val:
+            try:
+                return int(val)
+            except (ValueError, TypeError):
+                pass
+    if hasattr(exc, "headers") and isinstance(exc.headers, dict):
+        val = exc.headers.get("Retry-After") or exc.headers.get("retry-after")
+        if val:
+            try:
+                return int(val)
+            except (ValueError, TypeError):
+                pass
+    return None
+
+class RecoveryTask(Task):
+    """
+    Enterprise DLQ Base Task:
+    When retries are exhausted or a task fails permanently, routes payload,
+    error message, and stack trace into PostgreSQL Dead Letter Queue (DLQ).
+    """
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        db = SessionLocal()
+        try:
+            dlq_entry = DeadLetterQueue(
+                task_name=self.name,
+                task_id=str(task_id),
+                args=json.dumps(args, default=str),
+                kwargs=json.dumps(kwargs, default=str),
+                error=str(exc),
+                traceback=str(einfo) if einfo else traceback.format_exc(),
+                status="unresolved"
+            )
+            db.add(dlq_entry)
+            db.commit()
+            print(f"[DLQ] Task {self.name} ({task_id}) recorded in Dead Letter Queue.")
+        except Exception as db_err:
+            db.rollback()
+            print(f"[DLQ] Failed to record task {task_id} into DLQ: {db_err}")
+        finally:
+            db.close()
 
 SHADOW_MODE = os.getenv("SHADOW_MODE", "true").lower() == "true"
 
@@ -32,7 +93,7 @@ def diagnose_gpt_shadow(txn_id: str, error: str, amount: int) -> dict:
     }
 
 def log_decision(txn_id: str, champion_result: dict, challenger_result: dict, amount: int):
-    """Logs both Champion and Challenger decisions to shadow audit ledger."""
+    """Logs both Champion and Challenger decisions to shadow audit ledger and PostgreSQL."""
     entry = {
         "txn_id": txn_id,
         "amount": amount,
@@ -40,87 +101,63 @@ def log_decision(txn_id: str, champion_result: dict, challenger_result: dict, am
         "challenger": challenger_result
     }
     SHADOW_AUDIT_LOG.append(entry)
+    persist_shadow_decision(txn_id, champion_result, challenger_result, amount)
 
 from app.services.config_service import get_config
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(bind=True, base=RecoveryTask, max_retries=3)
 def process_recovery(self, txn_id: str, amount: int, email: str, error: str):
-    """
-    Production Celery worker with Global Kill Switch & Dynamic Rules:
-    1. Circuit Breaker Check: Halts immediately if is_paused == true
-    2. Dynamic Max Retries Check
-    3. Runs Champion & Challenger (Shadow Mode)
-    4. Executes ONLY Champion's decision on live Razorpay API
-    """
-    # 0. Global Kill Switch check before doing ANYTHING
     if get_config("is_paused", "false").lower() == "true":
-        print(f"🛑 Kill switch engaged. Halting recovery for {txn_id}")
-        return {"status": "paused", "txn_id": txn_id, "message": "Global kill switch engaged. Recovery halted."}
+        return {"status": "paused", "txn_id": txn_id, "message": "Recovery halted."}
 
-    # Dynamic Max Retries Check
     max_retries = int(get_config("max_retry_count", "3"))
     if self.request.retries >= max_retries:
-        print(f"⚠️ Max retry limit ({max_retries}) reached for {txn_id}. Aborting.")
         return {"status": "max_retries_exceeded", "txn_id": txn_id}
 
     try:
-        # 1. Run Champion (Production Engine)
-        champion_result = diagnose_transaction(error, amount)
-        
-        # 2. Run Challenger (GPT-4o) in shadow sandbox without live execution
-        challenger_result = diagnose_gpt_shadow(txn_id, error, amount) if SHADOW_MODE else None
-        
-        # 3. Log decision pair to shadow audit log
-        log_decision(txn_id, champion_result, challenger_result, amount)
-        
-        # 4. Execute Champion's decision (Real money API call)
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        link = client.payment_link.create({
-            "amount": amount,
-            "currency": "INR",
-            "description": f"Recovery for {txn_id}",
-            "customer": {"email": email}
-        })
-        
-        return {
-            "txn_id": txn_id,
-            "link": link.get("short_url", f"https://rzp.io/i/{txn_id[:8]}"),
-            "champion": champion_result,
-            "challenger": challenger_result
-        }
+        with trace_span("process_recovery", {"txn_id": txn_id, "amount": amount, "email": email}):
+            champion_result = diagnose_transaction(error, amount)
+            challenger_result = diagnose_gpt_shadow(txn_id, error, amount) if SHADOW_MODE else None
+            log_decision(txn_id, champion_result, challenger_result, amount)
+            
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            link = client.payment_link.create({
+                "amount": amount,
+                "currency": "INR",
+                "description": f"Recovery for {txn_id}",
+                "customer": {"email": email}
+            })
+            
+            return {
+                "txn_id": txn_id,
+                "link": link.get("short_url", f"https://rzp.io/i/{txn_id[:8]}"),
+                "champion": champion_result,
+                "challenger": challenger_result
+            }
     
     except Exception as e:
-        raise self.retry(exc=e, countdown=60 * 3)
+        # Respect Retry-After header if Razorpay returned 429 rate limit
+        retry_after = extract_retry_after(e)
+        countdown = retry_after if retry_after is not None else min(300, 60 * (2 ** self.request.retries))
+        raise self.retry(exc=e, countdown=countdown)
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(bind=True, base=RecoveryTask, max_retries=3)
 def process_recovery_shadow(self, txn_id: str, amount: int, email: str, error: str):
-    """Explicit shadow recovery task."""
     return process_recovery(self, txn_id, amount, email, error)
 
 def send_hinglish_reminder(customer_id: str, email: str, link_url: str) -> str:
-    """Dispatches a courteous, personalized Hinglish reminder for mandate re-authentication."""
     message = (
         f"Namaste! Aapka subscription auto-debit retries exhaust hone ke baad pause (halted) ho gaya hai. "
         f"Service bina kisi rukavat ke continue rakhne ke liye kripya is registration link par card ya UPI re-authenticate karein: {link_url}"
     )
-    print(f"📱 [Mandate Re-auth Dispatch to {email or customer_id}]: {message}")
     return message
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(bind=True, base=RecoveryTask, max_retries=3)
 def recover_subscription(self, subscription_id: str, customer_id: str, email: str = None, amount: int = 0):
-    """
-    Feature 1: Failed-Subscription Recovery (After Razorpay's 3 retries are exhausted).
-    When Razorpay sets a subscription to 'halted', creates a Registration Link for re-auth
-    and dispatches a Hinglish SMS/WhatsApp message.
-    """
-    # 0. Global Kill Switch check
     if get_config("is_paused", "false").lower() == "true":
-        print(f"🛑 Kill switch engaged. Halting subscription recovery for {subscription_id}")
         return {"status": "paused", "subscription_id": subscription_id}
 
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-    
-    # 1. Create a registration link to let customer re-authenticate
     try:
         reg_link = client.subscription.create_registration_link({
             "customer_id": customer_id,
@@ -173,15 +210,9 @@ def recover_subscription(self, subscription_id: str, customer_id: str, email: st
 
 from app.services.mandate_sequencer import MandateState, should_retry_mandate, get_next_optimal_window, get_ist_time
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(bind=True, base=RecoveryTask, max_retries=3)
 def retry_mandate_payment(self, mandate_id: str, token_id: str, amount: int, customer_id: str, force: bool = False):
-    """
-    Feature 2: Execute Mandate Payment with Smart Sequencer.
-    Debits subsequent payment using the confirmed mandate token.
-    Enforces banking clearing hours (09:00 - 17:00 IST), max 3 retries, and 4-hour cooldown.
-    """
     if get_config("is_paused", "false").lower() == "true":
-        print(f"🛑 Kill switch engaged. Halting mandate retry for {mandate_id}")
         return {"status": "paused", "mandate_id": mandate_id}
 
     from app.core.database import SessionLocal
@@ -257,12 +288,8 @@ def retry_mandate_payment(self, mandate_id: str, token_id: str, amount: int, cus
 
 from app.services.promise_service import send_promise_reminder
 
-@celery_app.task(bind=True, max_retries=3)
+@celery_app.task(bind=True, base=RecoveryTask, max_retries=3)
 def schedule_promise_reminder_task(self, promise_id: str):
-    """
-    Feature 5: Scheduled Reminder for Promise-to-Pay.
-    Checks if payment was received by promised date; sends polite Hinglish reminder or escalates.
-    """
     return send_promise_reminder(promise_id)
 
 
