@@ -65,19 +65,18 @@ from app.core.logging import setup_logging, logger
 from app.core.metrics import get_metrics_response
 from app.api.routes import router
 from app.routers.webhooks import router as webhooks_router
+from app.routers.assistant import router as assistant_router
+from app.routers.auth import router as auth_router
 from app.core.database import Base, engine, SessionLocal
+import app.models
 from app.models.transaction import Transaction
 from app.models.system_config import SystemConfig
 
-# 1️⃣ Setup Structured JSON Logging
 setup_logging()
 
-# 4️⃣ Rate Limiter Setup
 from app.core.limiter import limiter
 
-
 def run_migrations():
-    """8️⃣ Database Migration System (Alembic Automation)."""
     try:
         from alembic import command
         from alembic.config import Config
@@ -87,30 +86,32 @@ def run_migrations():
     except Exception as e:
         logger.warning("alembic_migration_notice", notice=str(e))
 
+from app.core.tracing import setup_tracing
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("service_startup", service="payresq-api", status="initializing")
     try:
-        run_migrations()
         Base.metadata.create_all(bind=engine)
         seed_initial_data_if_empty()
         logger.info("database_initialized", status="ready")
     except Exception as e:
         logger.error("database_init_error", error=str(e))
     yield
-    logger.info("service_shutdown", service="payresq-api", status="terminated")
+    logger.info("service_shutdown", service="payresq-api", status="draining_connections_graceful_shutdown")
 
 app = FastAPI(
     title="PayResQ Enterprise Revenue Recovery API",
-    description="Production-grade asynchronous recovery system with Celery, Prometheus, and Observability metrics.",
+    description="Asynchronous recovery system with Celery, Prometheus, and Observability metrics.",
     version="2.0.0",
     lifespan=lifespan
 )
 
+setup_tracing(app)
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# 5️⃣ CORS Configuration
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
@@ -120,17 +121,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount API routes
 app.include_router(router)
 app.include_router(webhooks_router)
+app.include_router(assistant_router)
+app.include_router(auth_router)
 
-# 2️⃣ Prometheus Metrics Endpoint
 @app.get("/metrics")
 async def get_metrics():
-    """Prometheus text exposition format endpoint."""
     return get_metrics_response()
 
-# 3️⃣ Health and Readiness Checks
 @app.get("/health")
 async def health_check():
     """Liveness probe: verifies the API process is alive."""

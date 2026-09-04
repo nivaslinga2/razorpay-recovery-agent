@@ -7,6 +7,8 @@ recovery_attempts_total = Counter('recovery_attempts_total', 'Total recovery att
 ai_cost_total = Counter('ai_cost_total', 'Total AI cost in INR', ['model_type'])
 queue_depth = Gauge('celery_queue_depth', 'Current Celery queue depth')
 api_latency = Histogram('api_latency_seconds', 'API latency in seconds', ['endpoint'])
+db_connections_active = Gauge('db_connections_active', 'Active database connections checked out of pool')
+db_pool_size = Gauge('db_pool_size', 'Configured database pool capacity')
 
 def get_metrics_response() -> Response:
     """Generates Prometheus text metric format response."""
