@@ -132,6 +132,7 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(webhooks_router)
+app.include_router(webhooks_router, prefix="/api")
 app.include_router(assistant_router)
 app.include_router(auth_router)
 
