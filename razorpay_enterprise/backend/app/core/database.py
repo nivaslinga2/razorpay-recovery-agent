@@ -1,16 +1,22 @@
+import os
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker
 from app.core.config import settings
 
-POOL_SIZE = 25
-MAX_OVERFLOW = 15
+# Supabase URL normalization: postgres:// -> postgresql://
+database_url = settings.DATABASE_URL
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))
+MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "5"))
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    database_url,
     pool_size=POOL_SIZE,
     max_overflow=MAX_OVERFLOW,
     pool_pre_ping=True,
-    pool_recycle=3600
+    pool_recycle=1800
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

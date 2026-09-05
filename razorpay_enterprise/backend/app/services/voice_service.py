@@ -37,8 +37,9 @@ def send_voice_recovery(customer_phone: str, hinglish_text: str, txn_id: str = N
         try:
             from twilio.rest import Client
             client = Client(twilio_sid, twilio_token)
+            base_url = os.getenv("WEBHOOK_BASE_URL", "http://localhost:8000").rstrip("/")
             call = client.calls.create(
-                url=f"http://localhost:8000{audio_stream_url}",
+                url=f"{base_url}{audio_stream_url}",
                 to=customer_phone,
                 from_=twilio_from
             )

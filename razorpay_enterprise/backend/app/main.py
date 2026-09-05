@@ -113,9 +113,18 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", f"{FRONTEND_URL},http://localhost:3000,http://localhost:5173").split(",")
+    if origin.strip()
+]
+if FRONTEND_URL and FRONTEND_URL not in cors_origins:
+    cors_origins.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "*"],
+    allow_origins=cors_origins,
+    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

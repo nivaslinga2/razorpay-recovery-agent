@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { previewVoice, dispatchVoiceCall } from '../services/api';
+import { previewVoice, dispatchVoiceCall, API_ORIGIN } from '../services/api';
 
 const TEMPLATES = [
   {
@@ -30,7 +30,7 @@ export const VoiceRecoveryCard = () => {
     setNotification(null);
     try {
       const res = await previewVoice(script);
-      setAudioUrl(`http://localhost:8000${res.audio_url}`);
+      setAudioUrl(`${API_ORIGIN}${res.audio_url}`);
       setNotification({ type: 'success', message: 'Audio preview ready.' });
     } catch (e) {
       setNotification({ type: 'danger', message: `TTS Error: ${e.message}` });
@@ -45,7 +45,7 @@ export const VoiceRecoveryCard = () => {
     try {
       const res = await dispatchVoiceCall(phone, script);
       setCallLog(res);
-      setAudioUrl(`http://localhost:8000${res.audio_url}`);
+      setAudioUrl(`${API_ORIGIN}${res.audio_url}`);
       setNotification({
         type: 'success',
         message: `Outbound call queued! Call SID: ${res.call_sid} (${res.delivery_channel})`
