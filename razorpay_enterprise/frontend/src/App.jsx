@@ -269,21 +269,7 @@ export const App = () => {
         />
       )}
 
-      {activeNav === 'recovered' && (
-        <TransactionTable
-          transactions={transactions.filter(t => t.is_recovered)}
-          onRecoverClick={txn => setModalTxn(txn)}
-          onBatchRecover={handleBatchRecover}
-          selectedIds={selectedIds}
-          onToggleSelect={handleToggleSelect}
-          onSelectAll={handleSelectAll}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter="recovered"
-          onStatusFilterChange={setStatusFilter}
-          batchLoading={batchLoading}
-        />
-      )}
+
 
       {activeNav === 'shadow' && (
         <ShadowModePanel data={shadowData} />

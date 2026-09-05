@@ -21,7 +21,6 @@ export const AppSidebar = ({
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
-    { id: 'recovered', label: 'Recovered Cases', icon: 'bi-check-circle-fill' },
     { id: 'shadow', label: 'Shadow Mode (A/B)', icon: 'bi-shield-shaded' },
     { id: 'mandates', label: 'Mandate Sequencer', icon: 'bi-calendar2-week-fill' },
     { id: 'b2b', label: 'B2B Receivables', icon: 'bi-receipt-cutoff' },

@@ -1,5 +1,22 @@
 import React from 'react';
 
+const formatRecoveryTime = (isoStr) => {
+  if (!isoStr) return 'Recently';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return isoStr;
+  }
+};
+
 export const TransactionTable = ({
   transactions,
   onRecoverClick,
@@ -13,7 +30,21 @@ export const TransactionTable = ({
   onStatusFilterChange,
   batchLoading
 }) => {
-  const unrecovered = transactions.filter(t => !t.is_recovered);
+  // Strict status filter logic:
+  // 'pending': unrecovered at-risk cases (failed/abandoned)
+  // 'failed': ONLY unrecovered failed cases
+  // 'abandoned': ONLY unrecovered abandoned cases
+  // 'recovered': ONLY recovered cases
+  // 'all': all cases
+  const filteredTransactions = transactions.filter(t => {
+    if (statusFilter === 'pending') return !t.is_recovered && ['failed', 'abandoned'].includes(t.status);
+    if (statusFilter === 'failed') return !t.is_recovered && t.status === 'failed';
+    if (statusFilter === 'abandoned') return !t.is_recovered && t.status === 'abandoned';
+    if (statusFilter === 'recovered') return t.is_recovered;
+    return true;
+  });
+
+  const unrecovered = filteredTransactions.filter(t => !t.is_recovered);
   const isAllSelected = unrecovered.length > 0 && selectedIds.size === unrecovered.length;
 
   return (
@@ -40,7 +71,7 @@ export const TransactionTable = ({
             className="badge ms-2"
             style={{ backgroundColor: '#F1F5F9', color: '#0C6BF5', border: '1px solid #E2E8F0' }}
           >
-            {transactions.length} items
+            {filteredTransactions.length} items
           </span>
         </div>
       </div>
@@ -132,12 +163,12 @@ export const TransactionTable = ({
                   <th>Transaction ID</th>
                   <th>Amount</th>
                   <th>Status</th>
-                  <th>Diagnosis & Recovery Message</th>
+                  <th>Diagnosis / Recovery Details</th>
                   <th className="text-end pe-3">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {transactions.map(txn => {
+                {filteredTransactions.map(txn => {
                   const isChecked = selectedIds.has(txn.id);
                   const hinglish = txn.diagnosis?.hinglish_message || 
                     (txn.error_code === 'CARD_DECLINED' 
@@ -178,10 +209,23 @@ export const TransactionTable = ({
                         )}
                       </td>
                       <td style={{ maxWidth: '340px' }}>
-                        <div className="small text-truncate" title={hinglish} style={{ color: '#334155' }}>
-                          <i className="bi bi-chat-left-dots-fill me-1 text-primary"></i>
-                          <em>"{hinglish}"</em>
-                        </div>
+                        {txn.is_recovered ? (
+                          <div className="d-flex flex-column gap-1">
+                            <div className="d-flex align-items-center gap-1 small fw-bold" style={{ color: '#059669' }}>
+                              <i className="bi bi-robot text-success"></i>
+                              <span>{txn.recovered_by || 'PayResQ AI Agent (Autonomous)'}</span>
+                            </div>
+                            <div className="small font-monospace" style={{ fontSize: '11px', color: '#64748B' }}>
+                              <i className="bi bi-clock-history me-1 text-primary"></i>
+                              Recovered at {formatRecoveryTime(txn.recovered_at)}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="small text-truncate" title={hinglish} style={{ color: '#334155' }}>
+                            <i className="bi bi-chat-left-dots-fill me-1 text-primary"></i>
+                            <em>"{hinglish}"</em>
+                          </div>
+                        )}
                       </td>
                       <td className="text-end pe-3">
                         {txn.is_recovered ? (

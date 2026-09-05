@@ -97,7 +97,7 @@ def get_at_risk_transactions(
     elif status == "recovered":
         query = query.filter(Transaction.is_recovered == True)
     elif status in ["failed", "abandoned"]:
-        query = query.filter(Transaction.status == status)
+        query = query.filter(Transaction.status == status, Transaction.is_recovered == False)
 
     # Search filtering
     if search:
@@ -124,6 +124,7 @@ def get_at_risk_transactions(
             "bank_rrn": t.bank_rrn,
             "is_recovered": t.is_recovered,
             "recovered_at": t.recovered_at.isoformat() if t.recovered_at else None,
+            "recovered_by": "PayResQ AI Agent (Autonomous)",
             "recovery_attempts": t.recovery_attempts,
             "created_at": t.created_at.isoformat() if t.created_at else None
         }
