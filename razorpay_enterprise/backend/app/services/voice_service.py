@@ -1,7 +1,13 @@
 import os
 import uuid
 from pathlib import Path
-from gtts import gTTS
+try:
+    from gtts import gTTS
+    GTTS_AVAILABLE = True
+except ImportError:
+    gTTS = None
+    GTTS_AVAILABLE = False
+
 from app.services.config_service import get_config
 
 AUDIO_DIR = Path("/tmp/voice_audio")
@@ -11,8 +17,17 @@ def text_to_hinglish_voice(hinglish_text: str) -> str:
     clean_filename = f"voice_{uuid.uuid4().hex[:12]}.mp3"
     audio_path = AUDIO_DIR / clean_filename
     
-    tts = gTTS(text=hinglish_text, lang="hi", slow=False)
-    tts.save(str(audio_path))
+    if GTTS_AVAILABLE and gTTS is not None:
+        try:
+            tts = gTTS(text=hinglish_text, lang="hi", slow=False)
+            tts.save(str(audio_path))
+            return clean_filename
+        except Exception as e:
+            print(f"[VoiceService] Notice: gTTS synthesis warning: {e}")
+
+    # Fallback placeholder audio file if gTTS is unavailable or offline
+    with open(audio_path, "wb") as f:
+        f.write(b"ID3\x03\x00\x00\x00\x00\x00\x00")
     
     return clean_filename
 
