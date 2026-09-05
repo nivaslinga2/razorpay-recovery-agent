@@ -11,7 +11,26 @@ from app.services.shadow import persist_shadow_decision
 import razorpay
 import traceback
 
-celery_app = Celery("worker", broker=settings.REDIS_URL)
+import ssl
+
+# Allow Celery to run in containerized environments as root
+os.environ["C_FORCE_ROOT"] = "true"
+
+broker_url = settings.REDIS_URL
+celery_app = Celery("worker", broker=broker_url)
+
+# Support Upstash Redis TLS (rediss://)
+if broker_url.startswith("rediss://"):
+    celery_app.conf.update(
+        broker_use_ssl={'ssl_cert_reqs': ssl.CERT_NONE},
+        redis_backend_use_ssl={'ssl_cert_reqs': ssl.CERT_NONE}
+    )
+
+celery_app.conf.update(
+    broker_connection_retry_on_startup=True,
+    worker_prefetch_multiplier=1,
+    task_acks_late=True
+)
 
 # 1. Graceful Shutdown Handlers (Kubernetes SIGTERM / Docker stop compliance)
 @worker_shutting_down.connect

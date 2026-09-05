@@ -16,6 +16,7 @@ COPY . .
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV C_FORCE_ROOT=1
 
 # Railway defaults to running this command or will use the Procfile
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
