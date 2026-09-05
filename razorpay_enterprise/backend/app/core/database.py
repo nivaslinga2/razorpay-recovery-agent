@@ -8,6 +8,16 @@ database_url = settings.DATABASE_URL
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
+# Handle unencoded special characters (e.g. '@') inside passwords
+if database_url.count('@') > 1:
+    last_at = database_url.rfind('@')
+    first_colon = database_url.find(':', database_url.find('//') + 2)
+    if first_colon != -1 and first_colon < last_at:
+        user_prefix = database_url[:first_colon + 1]
+        raw_pw = database_url[first_colon + 1:last_at]
+        host_suffix = database_url[last_at:]
+        database_url = user_prefix + raw_pw.replace('@', '%40') + host_suffix
+
 POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))
 MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "5"))
 
