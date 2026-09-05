@@ -3,8 +3,8 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker
 from app.core.config import settings
 
-# Supabase URL normalization: postgres:// -> postgresql://
-database_url = settings.DATABASE_URL
+# Supabase URL normalization: postgres:// -> postgresql:// and strip whitespace/newlines
+database_url = settings.DATABASE_URL.strip()
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
